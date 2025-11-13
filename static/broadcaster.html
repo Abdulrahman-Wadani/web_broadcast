@@ -19,7 +19,7 @@ video{border:2px solid #444; background: #222;}
 
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 <script>
-const socket = io("http://192.168.100.226:5000");
+const socket = io();
 const video = document.getElementById('video');
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
