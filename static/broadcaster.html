@@ -2,63 +2,126 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Broadcaster</title>
+<title>Burst Analysis</title>
 <style>
-body{background:#111;color:#eee;text-align:center;font-family:sans-serif}
-video{border:2px solid #444; background: #222;}
-#result{font-size: 1.5em; color: #0f0; margin-top: 10px;}
+body{background:#111;color:#eee;text-align:center;font-family:sans-serif; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 20px; padding-top: 20px;}
+video {border:2px solid #444; background: #222;}
+h2, h3 {margin: 5px;}
+button { padding: 10px 20px; font-size: 1.2em; cursor: pointer; background: #0a0; color: white; border: none; border-radius: 5px;}
+button:disabled { background: #555; }
+#timerDiv { font-size: 3em; color: #0f0; font-family: monospace; height: 1.2em;}
+#textResultDiv { font-size: 1.2em; color: #eee; font-family: monospace; min-height: 1.5em; background: #222; padding: 10px; border-radius: 5px; width: 640px; margin-top: 10px;}
 </style>
 </head>
 <body>
-<h2>Broadcaster</h2>
-<button id="startBtn">Start</button><br><br>
-<video id="video" autoplay playsinline muted width="640" height="360"></video>
-<canvas id="canvas" width="1920" height="1080" style="display:none;"></canvas>
 
-<div id="result">...</div>
+<div>
+    <h2>Broadcaster</h2>
+    <video id="video" autoplay playsinline muted width="1280" height="720"></video>
+    <canvas id="canvas" width="1280" height="720" style="display:none;"></canvas>
+</div>
+
+<div>
+    <button id="startBtn">Start Camera</button>
+    <button id="analysisBtn" style="display:none;">Start Analysis</button>
+    
+    <div id="timerDiv"></div>
+    <div id="textResultDiv">Waiting for analysis...</div>
+</div>
+
 
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 <script>
-const socket = io("http://192.168.100.226:5000");
+const socket = io();
+const audioPlayer = new Audio();
 const video = document.getElementById('video');
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
-const resultDiv = document.getElementById('result'); 
-const startBtn = document.getElementById('startBtn');
 
-// للتأكد أننا متصلون
+// العناصر الجديدة
+const startBtn = document.getElementById('startBtn');
+const analysisBtn = document.getElementById('analysisBtn');
+const timerDiv = document.getElementById('timerDiv');
+const textResultDiv = document.getElementById('textResultDiv');
+
+// متغيرات للتحكم بالحلقات
+let sendingInterval = null;
+let timerInterval = null;
+
+// عند الاتصال
 socket.on('connect', () => {
-  console.log('Socket.IO Connected!');
+    console.log('Socket.IO Connected!');
 });
 
-// 1. بدء البث
+// 1. بدء الكاميرا أولاً
 startBtn.onclick = async () => {
-try {
-const constraints = {
-  video: {
-    width: { ideal: 1920 },
-    height: { ideal: 1080 }
+  try {
+    const constraints = {
+        video: {
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+        }
+    };
+    const stream = await navigator.mediaDevices.getUserMedia(constraints);    video.srcObject = stream;
+    startBtn.style.display = 'none'; // إخفاء زر الكاميرا
+    analysisBtn.style.display = 'inline-block'; // إظهار زر التحليل
+  } catch(e) {
+    textResultDiv.innerText = e.message;
+    textResultDiv.style.color = 'red';
   }
 };
-const stream = await navigator.mediaDevices.getUserMedia(constraints);
-video.srcObject = stream;
-startBtn.style.display = 'none'; // إخفاء الزر
-// 2. بدء حلقة الإرسال (5 مرات في الثانية)
-setInterval(() => {
-ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-const b64 = canvas.toDataURL('image/jpeg', 0.5).split(',')[1];
-// 3. إرسال الإطار إلى الخادم
-socket.emit('frame', { b64: b64 });
-}, 1000 / 10); 
-} catch(e) {
-resultDiv.innerText = e.message;
-resultDiv.style.color = 'red';
-}
+
+// 2. عند الضغط على زر التحليل
+analysisBtn.onclick = () => {
+    // تعطيل الزر لمنع الضغطات المتعددة
+    analysisBtn.disabled = true;
+    textResultDiv.innerText = "Starting analysis...";
+    textResultDiv.style.color = '#0f0'; // أخضر
+
+    let countdown = 5; // 5 ثواني
+    timerDiv.innerText = countdown;
+
+    // --- بدء حلقة الإرسال (6 إطارات في الثانية) ---
+    sendingInterval = setInterval(() => {
+        try {
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const b64 = canvas.toDataURL('image/jpeg', 0.5).split(',')[1];
+            socket.emit('frame', { b64: b64 });
+        } catch (e) {
+            console.error(e);
+        }
+    }, 1000 / 6); // (1000ms / 6fps)
+
+    // --- بدء حلقة عداد الثواني (كل ثانية) ---
+    timerInterval = setInterval(() => {
+        countdown--;
+        timerDiv.innerText = countdown;
+
+        // --- عند انتهاء الـ 5 ثواني ---
+        if (countdown <= 0) {
+            // إيقاف كل الحلقات
+            clearInterval(timerInterval);
+            clearInterval(sendingInterval);
+            
+            // إعادة تفعيل الزر
+            analysisBtn.disabled = false;
+        }
+    }, 1000); // (كل ثانية)
 };
 
-// 4. استقبال النتيجة
-socket.on('result', (text) => {
-resultDiv.innerText = text; // عرض النص العائد من الخادم
+// 3. استقبال النتيجة النصية من الخادم
+socket.on('result', (data) => {
+    textResultDiv.innerText = data.text;
+    if (data.url) {
+        audioPlayer.src = data.url;
+        audioPlayer.play();
+    }
+});
+
+// (اختياري) استقبال أخطاء الخادم
+socket.on('server_error', (error_msg) => {
+    textResultDiv.innerText = error_msg;
+    textResultDiv.style.color = 'red';
 });
 </script>
 </body>

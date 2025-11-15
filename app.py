@@ -2,8 +2,10 @@ import base64
 import random
 import cv2
 import numpy as np
+import io
 from flask import Flask, send_from_directory
 from flask_socketio import SocketIO
+from gtts import gTTS
 
 app = Flask(__name__, static_url_path='/static')
 socketio = SocketIO(app, cors_allowed_origins="*")
@@ -31,14 +33,19 @@ def predict(data):
         return
 
     
-    prediction_text = random.choice([
-        "Prediction: Cat",
-        "Prediction: Dog",
-        "Prediction: Bird"
-    ])
-    # Replace with actual model prediction 
+    prediction_text = random.choice(["أنا","هذا","ُاريد","شيء","هنا","الان","لا","في","ماذا","اخرس"])
 
-    socketio.emit('result', prediction_text)
+    audio_buffer = io.BytesIO()
+
+    tts = gTTS(text=prediction_text, lang="ar")
+    tts.write_to_fp(audio_buffer)
+
+    audio_bytes = audio_buffer.getvalue()
+    b64_string = base64.b64encode(audio_bytes).decode('utf-8')
+    data_uri = f"data:audio/mp3;base64,{b64_string}"
+    
+    socketio.emit('result', {"text": prediction_text,
+        "url": data_uri})
 
 if __name__ == "__main__":
     socketio.run(app, host="0.0.0.0", port=5000)
