@@ -43,7 +43,7 @@ model.add(Dense(20, activation='softmax'))
 print(os.getcwd())
 
 #loading the best model
-model.load_weights(r".\DL_model\checkpoints\best_model.h5")
+model.load_weights(r".\DL_model\checkpoints\best_model.keras")
 
 words = np.array(["أنا","هذا","اريد","شيء","هنا","الان","لا","في","ماذا","اخرس"])
 
@@ -73,7 +73,7 @@ sequence = []
 sentence = []
 predictions = []
 threshold = 0.3
-
+word_frames_count=0
 
 @app.route('/')
 def index():
@@ -81,6 +81,8 @@ def index():
 
 @socketio.on('Word_frame')
 def predict(data):
+    
+    
     
     global words
     
@@ -117,7 +119,7 @@ def predict(data):
         print(len(sequence))
         
         if len(sequence) == 30:
-            sentence=[]
+            
             res = model.predict(np.expand_dims(sequence, axis=0))[0]
             print(words[np.argmax(res)])
             
@@ -131,6 +133,7 @@ def predict(data):
             b64_string = base64.b64encode(audio_bytes).decode('utf-8')
             data_uri = f"data:audio/mp3;base64,{b64_string}"
             
+            sequence=[]
             socketio.emit('result', {"text": prediction_text,
                 "url": data_uri})
     
