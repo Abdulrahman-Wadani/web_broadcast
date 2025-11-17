@@ -142,7 +142,6 @@ def predict(data):
         print(len(sequence))
         
         if len(sequence) == 30:
-            print("==========================================================================================================================================================")
             res = model.predict(np.expand_dims(sequence, axis=0))[0]
             print(words[np.argmax(res)])
             sequence = []
