@@ -45,28 +45,7 @@ print(os.getcwd())
 #loading the best model
 model.load_weights(r".\DL_model\checkpoints\best_model.h5")
 
-words = [
-    'Skeleton',
-    'Skull',
-    'Spine',
-    'Rib cage',
-    'Respiratory system',
-    'Trachea',
-    'Lungs',
-    'Inhalation - Exhalation',
-    'Digestive system',
-    'Face',
-    'Pharynx',
-    'Liver',
-    'Pancreas',
-    'Small intestine',
-    'Large intestine',
-    'Appendix',
-    'Nervous system',
-    'Heart',
-    'Five senses',
-    'Muscle'
-]
+words = np.array(["أنا","هذا","اريد","شيء","هنا","الان","لا","في","ماذا","اخرس"])
 
 
 mp_holistic = mp.solutions.holistic #holistics model
@@ -138,6 +117,7 @@ def predict(data):
         print(len(sequence))
         
         if len(sequence) == 30:
+            sentence=[]
             res = model.predict(np.expand_dims(sequence, axis=0))[0]
             print(words[np.argmax(res)])
             
