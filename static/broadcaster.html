@@ -2,13 +2,42 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Burst Analysis</title>
+<title>Burst vs Continuous Analysis</title>
 <style>
+/* --- (تعديل) تم دمج كل الأنماط الجديدة هنا --- */
 body{background:#111;color:#eee;text-align:center;font-family:sans-serif; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 20px; padding-top: 20px;}
 video {border:2px solid #444; background: #222;}
 h2, h3 {margin: 5px;}
-button { padding: 10px 20px; font-size: 1.2em; cursor: pointer; background: #0a0; color: white; border: none; border-radius: 5px;}
+
+/* (جديد) تنسيق مفتاح التبديل */
+#toggleContainer { display: none; margin-top: 15px; align-items: center; justify-content: center; gap: 10px; font-size: 1.1em; }
+.switch { position: relative; display: inline-block; width: 60px; height: 34px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #0a0; transition: .4s; }
+.slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; }
+input:checked + .slider { background-color: #0a0; }
+input:checked + .slider:before { transform: translateX(26px); }
+.slider.round { border-radius: 34px; }
+.slider.round:before { border-radius: 50%; }
+
+/* (تعديل) تنسيق الأزرار */
+button { padding: 10px 20px; font-size: 1.2em; cursor: pointer; background: #0a0; color: white; border: none; border-radius: 5px; min-width: 300px;}
 button:disabled { background: #555; }
+
+/* (جديد) حاوية الأزرار لتثبيتها في نفس المكان */
+#buttonContainer {
+    position: relative; 
+    height: 50px; /* ارتفاع يكفي لزر واحد */
+    margin-top: 10px;
+}
+/* (جديد) تنسيق الأزرار لتكون فوق بعضها */
+#analysisBtnBurst, #analysisBtnContinuous {
+    position: absolute; /* هذا هو المفتاح! */
+    left: 50%;
+    transform: translateX(-50%); /* للتوسيط */
+}
+
+/* (بدون تغيير) */
 #timerDiv { font-size: 3em; color: #0f0; font-family: monospace; height: 1.2em;}
 #textResultDiv { font-size: 1.2em; color: #eee; font-family: monospace; min-height: 1.5em; background: #222; padding: 10px; border-radius: 5px; width: 640px; margin-top: 10px;}
 </style>
@@ -16,112 +45,184 @@ button:disabled { background: #555; }
 <body>
 
 <div>
-    <h2>Broadcaster</h2>
-    <video id="video" autoplay playsinline muted width="1280" height="720"></video>
-    <canvas id="canvas" width="1280" height="720" style="display:none;"></canvas>
+    <h2>Broadcaster</h2>
+    <video id="video" autoplay playsinline muted width="1280" height="720"></video>
+    <canvas id="canvas" width="1280" height="720" style="display:none;"></canvas>
 </div>
 
 <div>
-    <button id="startBtn">Start Camera</button>
-    <button id="analysisBtn" style="display:none;">Start Analysis</button>
-    
-    <div id="timerDiv"></div>
-    <div id="textResultDiv">Waiting for analysis...</div>
+        <button id="startBtn">Start Camera</button>
+
+    <div id="toggleContainer">
+        <span>Word Analysis</span>
+        <label class="switch">
+            <input type="checkbox" id="modeToggle">
+            <span class="slider round"></span>
+        </label>
+        <span>Letter Analysis</span>
+    </div>
+
+    <div id="buttonContainer">
+        <button id="analysisBtnBurst" style="display:none;">Start Analysis</button>
+        <button id="analysisBtnContinuous" style="display:none;">Start Analysis</button>
+    </div>
+    
+        <div id="timerDiv"></div>
+    <div id="textResultDiv">Waiting for analysis...</div>
 </div>
 
 
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 <script>
 const socket = io();
-const audioPlayer = new Audio();
+const audioPlayer = new Audio(); // (موجود لديك)
 const video = document.getElementById('video');
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 
-// العناصر الجديدة
+// --- (تعديل) جلب كل العناصر الجديدة ---
 const startBtn = document.getElementById('startBtn');
-const analysisBtn = document.getElementById('analysisBtn');
 const timerDiv = document.getElementById('timerDiv');
 const textResultDiv = document.getElementById('textResultDiv');
 
-// متغيرات للتحكم بالحلقات
-let sendingInterval = null;
-let timerInterval = null;
+const toggleContainer = document.getElementById('toggleContainer');
+const modeToggle = document.getElementById('modeToggle');
+const buttonContainer = document.getElementById('buttonContainer');
+const burstBtn = document.getElementById('analysisBtnBurst'); // زر العد التنازلي
+const continuousBtn = document.getElementById('analysisBtnContinuous'); // زر المستمر
+
+// --- (تعديل) متغيرات الحالة ---
+let sendingInterval = null; // سيستخدمه كلا الوضعين
+let timerInterval = null; // خاص بالوضع الأول
+let isStreaming = false; // خاص بالوضع الثاني
 
 // عند الاتصال
 socket.on('connect', () => {
-    console.log('Socket.IO Connected!');
+    console.log('Socket.IO Connected!');
 });
 
-// 1. بدء الكاميرا أولاً
+// 1. بدء الكاميرا أولاً (تعديل)
 startBtn.onclick = async () => {
-  try {
-    const constraints = {
-        video: {
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
-        }
-    };
-    const stream = await navigator.mediaDevices.getUserMedia(constraints);    video.srcObject = stream;
-    startBtn.style.display = 'none'; // إخفاء زر الكاميرا
-    analysisBtn.style.display = 'inline-block'; // إظهار زر التحليل
-  } catch(e) {
-    textResultDiv.innerText = e.message;
-    textResultDiv.style.color = 'red';
-  }
+  try {
+    const constraints = {
+        video: {
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+        }
+    };
+    const stream = await navigator.mediaDevices.getUserMedia(constraints);   
+    video.srcObject = stream;
+    startBtn.style.display = 'none'; // إخفاء زر الكاميرا
+    
+    // (جديد) إظهار مفتاح التبديل وحاوية الأزرار
+    burstBtn.style.display = 'block';
+    toggleContainer.style.display = 'flex'; 
+
+  } catch(e) {
+    textResultDiv.innerText = e.message;
+    textResultDiv.style.color = 'red';
+  }
 };
 
-// 2. عند الضغط على زر التحليل
-analysisBtn.onclick = () => {
-    // تعطيل الزر لمنع الضغطات المتعددة
-    analysisBtn.disabled = true;
-    textResultDiv.innerText = "Starting analysis...";
-    textResultDiv.style.color = '#0f0'; // أخضر
-
-    let countdown = 5; // 5 ثواني
-    timerDiv.innerText = countdown;
-
-    // --- بدء حلقة الإرسال (6 إطارات في الثانية) ---
-    sendingInterval = setInterval(() => {
-        try {
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            const b64 = canvas.toDataURL('image/jpeg', 0.5).split(',')[1];
-            socket.emit('frame', { b64: b64 });
-        } catch (e) {
-            console.error(e);
-        }
-    }, 1000 / 6); // (1000ms / 6fps)
-
-    // --- بدء حلقة عداد الثواني (كل ثانية) ---
-    timerInterval = setInterval(() => {
-        countdown--;
-        timerDiv.innerText = countdown;
-
-        // --- عند انتهاء الـ 5 ثواني ---
-        if (countdown <= 0) {
-            // إيقاف كل الحلقات
-            clearInterval(timerInterval);
-            clearInterval(sendingInterval);
-            
-            // إعادة تفعيل الزر
-            analysisBtn.disabled = false;
-        }
-    }, 1000); // (كل ثانية)
-};
-
-// 3. استقبال النتيجة النصية من الخادم
-socket.on('result', (data) => {
-    textResultDiv.innerText = data.text;
-    if (data.url) {
-        audioPlayer.src = data.url;
-        audioPlayer.play();
+// --- (جديد) 2. عند تغيير مفتاح التبديل ---
+modeToggle.onchange = () => {
+    if (modeToggle.checked) {
+        // الوضع المستمر
+        burstBtn.style.display = 'none';
+        continuousBtn.style.display = 'inline-block';
+    } else {
+        // وضع العد التنازلي
+        burstBtn.style.display = 'inline-block';
+        continuousBtn.style.display = 'none';
     }
+};
+
+// --- (تعديل) 3. عند الضغط على زر التحليل بالعداد (burstBtn) ---
+burstBtn.onclick = () => {
+    // تعطيل الزر ومفتاح التبديل
+    burstBtn.disabled = true;
+    modeToggle.disabled = true;
+    textResultDiv.innerText = "Starting analysis...";
+    textResultDiv.style.color = '#0f0';
+
+    let countdown = 5;
+    timerDiv.innerText = countdown;
+
+    // --- بدء حلقة الإرسال (6 إطارات في الثانية) ---
+    sendingInterval = setInterval(() => {
+        try {
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const b64 = canvas.toDataURL('image/jpeg', 0.5).split(',')[1];
+            
+            // *** (التغيير هنا) ***
+            socket.emit('Word_frame', { b64: b64 }); 
+            // ***
+
+        } catch (e) { console.error(e); }
+    }, 1000 / 6);
+
+    // --- بدء حلقة عداد الثواني ---
+    timerInterval = setInterval(() => {
+        countdown--;
+        timerDiv.innerText = countdown;
+
+        if (countdown <= 0) {
+            clearInterval(timerInterval);
+            clearInterval(sendingInterval);
+            burstBtn.disabled = false;
+            modeToggle.disabled = false;
+            timerDiv.innerText = "";
+        }
+    }, 1000);
+};
+
+// --- (جديد) 4. عند الضغط على زر التحليل المستمر ---
+continuousBtn.onclick = () => {
+    if (isStreaming === false) {
+        // --- بدء التشغيل ---
+        isStreaming = true;
+        continuousBtn.innerText = "Stop Analysis";
+        continuousBtn.style.background = '#a00';
+        modeToggle.disabled = true;
+        timerDiv.innerText = "LIVE";
+
+        // بدء الإرسال
+        sendingInterval = setInterval(() => {
+            try {
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                const b64 = canvas.toDataURL('image/jpeg', 0.5).split(',')[1];
+                
+                socket.emit('Letter_frame', { b64: b64 });
+
+            } catch (e) { console.error(e); }
+        }, 1000 / 6);
+        
+    } else {
+        // --- الإيقاف ---
+        isStreaming = false;
+        continuousBtn.innerText = "Start Analysis";
+        continuousBtn.style.background = '#0a0';
+        modeToggle.disabled = false;
+        timerDiv.innerText = "";
+
+        clearInterval(sendingInterval);
+        sendingInterval = null;
+    }
+};
+
+// 5. استقبال النتيجة النصية من الخادم (بدون تغيير)
+socket.on('result', (data) => {
+    textResultDiv.innerText = data.text;
+    if (data.url) {
+        audioPlayer.src = data.url;
+        audioPlayer.play();
+    }
 });
 
-// (اختياري) استقبال أخطاء الخادم
+// 6. استقبال أخطاء الخادم (بدون تغيير)
 socket.on('server_error', (error_msg) => {
-    textResultDiv.innerText = error_msg;
-    textResultDiv.style.color = 'red';
+    textResultDiv.innerText = error_msg;
+    textResultDiv.style.color = 'red';
 });
 </script>
 </body>
