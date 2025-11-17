@@ -45,13 +45,13 @@ button:disabled { background: #555; }
 <body>
 
 <div>
- <h2>Broadcaster</h2>
-  <video id="video" autoplay playsinline muted width="1280" height="720"></video>
-  <canvas id="canvas" width="1280" height="720" style="display:none;"></canvas>
+    <h2>Broadcaster</h2>
+    <video id="video" autoplay playsinline muted width="1280" height="720"></video>
+    <canvas id="canvas" width="1280" height="720" style="display:none;"></canvas>
 </div>
 
 <div>
-      <button id="startBtn">Start Camera</button>
+        <button id="startBtn">Start Camera</button>
 
     <div id="toggleContainer">
         <span>Word Analysis</span>
@@ -66,9 +66,9 @@ button:disabled { background: #555; }
         <button id="analysisBtnBurst" style="display:none;">Start Analysis</button>
         <button id="analysisBtnContinuous" style="display:none;">Start Analysis</button>
     </div>
-  
-      <div id="timerDiv"></div>
-  <div id="textResultDiv">Waiting for analysis...</div>
+    
+        <div id="timerDiv"></div>
+    <div id="textResultDiv">Waiting for analysis...</div>
 </div>
 
 
@@ -98,30 +98,30 @@ let isStreaming = false; // خاص بالوضع الثاني
 
 // عند الاتصال
 socket.on('connect', () => {
-  console.log('Socket.IO Connected!');
+    console.log('Socket.IO Connected!');
 });
 
 // 1. بدء الكاميرا أولاً (تعديل)
 startBtn.onclick = async () => {
- try {
-  const constraints = {
-    video: {
-      width: { ideal: 1280 },
-      height: { ideal: 720 }
-    }
-  };
-  const stream = await navigator.mediaDevices.getUserMedia(constraints);  
+  try {
+    const constraints = {
+        video: {
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+        }
+    };
+    const stream = await navigator.mediaDevices.getUserMedia(constraints);   
     video.srcObject = stream;
-  startBtn.style.display = 'none'; // إخفاء زر الكاميرا
-  
+    startBtn.style.display = 'none'; // إخفاء زر الكاميرا
+    
     // (جديد) إظهار مفتاح التبديل وحاوية الأزرار
     burstBtn.style.display = 'block';
     toggleContainer.style.display = 'flex'; 
 
- } catch(e) {
-  textResultDiv.innerText = e.message;
-  textResultDiv.style.color = 'red';
- }
+  } catch(e) {
+    textResultDiv.innerText = e.message;
+    textResultDiv.style.color = 'red';
+  }
 };
 
 // --- (جديد) 2. عند تغيير مفتاح التبديل ---
@@ -139,41 +139,41 @@ modeToggle.onchange = () => {
 
 // --- (تعديل) 3. عند الضغط على زر التحليل بالعداد (burstBtn) ---
 burstBtn.onclick = () => {
-  // تعطيل الزر ومفتاح التبديل
-  burstBtn.disabled = true;
+    // تعطيل الزر ومفتاح التبديل
+    burstBtn.disabled = true;
     modeToggle.disabled = true;
-  textResultDiv.innerText = "Starting analysis...";
-  textResultDiv.style.color = '#0f0';
+    textResultDiv.innerText = "Starting analysis...";
+    textResultDiv.style.color = '#0f0';
 
-  let countdown = 5;
-  timerDiv.innerText = countdown;
+    let countdown = 5;
+    timerDiv.innerText = countdown;
 
-  // --- بدء حلقة الإرسال (6 إطارات في الثانية) ---
-  sendingInterval = setInterval(() => {
-    try {
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      const b64 = canvas.toDataURL('image/jpeg', 0.5).split(',')[1];
-      
+    // --- بدء حلقة الإرسال (6 إطارات في الثانية) ---
+    sendingInterval = setInterval(() => {
+        try {
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const b64 = canvas.toDataURL('image/jpeg', 0.5).split(',')[1];
+            
             // *** (التغيير هنا) ***
-      socket.emit('Word_frame', { b64: b64 }); 
+            socket.emit('Word_frame', { b64: b64 }); 
             // ***
 
-    } catch (e) { console.error(e); }
-  }, 1000 / 6);
+        } catch (e) { console.error(e); }
+    }, 1000 / 6);
 
-  // --- بدء حلقة عداد الثواني ---
-  timerInterval = setInterval(() => {
-    countdown--;
-    timerDiv.innerText = countdown;
+    // --- بدء حلقة عداد الثواني ---
+    timerInterval = setInterval(() => {
+        countdown--;
+        timerDiv.innerText = countdown;
 
-    if (countdown <= 0) {
-      clearInterval(timerInterval);
-      clearInterval(sendingInterval);
-      burstBtn.disabled = false;
+        if (countdown <= 0) {
+            clearInterval(timerInterval);
+            clearInterval(sendingInterval);
+            burstBtn.disabled = false;
             modeToggle.disabled = false;
             timerDiv.innerText = "";
-    }
-  }, 1000);
+        }
+    }, 1000);
 };
 
 // --- (جديد) 4. عند الضغط على زر التحليل المستمر ---
@@ -212,17 +212,17 @@ continuousBtn.onclick = () => {
 
 // 5. استقبال النتيجة النصية من الخادم (بدون تغيير)
 socket.on('result', (data) => {
-  textResultDiv.innerText = data.text;
-  if (data.url) {
-    audioPlayer.src = data.url;
-    audioPlayer.play();
-  }
+    textResultDiv.innerText = data.text;
+    if (data.url) {
+        audioPlayer.src = data.url;
+        audioPlayer.play();
+    }
 });
 
 // 6. استقبال أخطاء الخادم (بدون تغيير)
 socket.on('server_error', (error_msg) => {
-  textResultDiv.innerText = error_msg;
-  textResultDiv.style.color = 'red';
+    textResultDiv.innerText = error_msg;
+    textResultDiv.style.color = 'red';
 });
 </script>
 </body>
