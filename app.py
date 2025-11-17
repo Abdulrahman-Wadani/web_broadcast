@@ -2,8 +2,10 @@ import base64
 import random
 import cv2
 import numpy as np
+import io
 from flask import Flask, send_from_directory
 from flask_socketio import SocketIO
+from gtts import gTTS
 import os
 import time
 import mediapipe as mp
@@ -11,7 +13,6 @@ from tqdm import tqdm
 import pandas
 import pickle
 import random
-
 
 import tensorflow as tf
 
@@ -88,12 +89,6 @@ def extract_featurs(results):
     return np.concatenate([pose, face, left_hand, right_hand])
 
 
-@app.route('/')
-def index():
-    return send_from_directory('static', 'broadcaster.html')
-
-
-
 #detection variables
 sequence = []
 sentence = []
@@ -101,7 +96,11 @@ predictions = []
 threshold = 0.3
 
 
-@socketio.on('frame')
+@app.route('/')
+def index():
+    return send_from_directory('static', 'broadcaster.html')
+
+@socketio.on('Word_frame')
 def predict(data):
     
     global words
@@ -110,7 +109,6 @@ def predict(data):
     global sentence
     global predictions
     global threshold
-    
 
     b64 = data.get("b64")
     if not b64:
@@ -125,9 +123,7 @@ def predict(data):
     except Exception as e:
         socketio.emit('result', f"Error: Bad image ({e})")
         return
-    
-    
-    
+
     #1. Make detections
     with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=0.5) as holistic:
         print(tf.test.gpu_device_name())
@@ -144,14 +140,52 @@ def predict(data):
         if len(sequence) == 30:
             res = model.predict(np.expand_dims(sequence, axis=0))[0]
             print(words[np.argmax(res)])
-            sequence = []
-            socketio.emit('result',  words[np.argmax(res)])
             
-    
-        
+            prediction_text = words[np.argmax(res)]
+            audio_buffer = io.BytesIO()
+
+            tts = gTTS(text=prediction_text, lang="ar")
+            tts.write_to_fp(audio_buffer)
+
+            audio_bytes = audio_buffer.getvalue()
+            b64_string = base64.b64encode(audio_bytes).decode('utf-8')
+            data_uri = f"data:audio/mp3;base64,{b64_string}"
+            
+            socketio.emit('result', {"text": prediction_text,
+                "url": data_uri})
     
 
+@socketio.on('Letter_frame')
+def predict(data):
+
+    b64 = data.get("b64")
+    if not b64:
+        socketio.emit('result', "Error: No b64 data")
+        return
+
+    try:
+        img_bytes = base64.b64decode(b64)
+        frame = cv2.imdecode(np.frombuffer(img_bytes, np.uint8), cv2.IMREAD_COLOR)
+        if frame is None: 
+            raise Exception("الصورة تالفة")
+    except Exception as e:
+        socketio.emit('result', f"Error: Bad image ({e})")
+        return
+
+    
+    prediction_text = random.choice(["أنا","هذا","ُاريد","شيء","هنا","الان","لا","في","ماذا","اخرس"])
+
+    audio_buffer = io.BytesIO()
+
+    tts = gTTS(text=prediction_text, lang="ar")
+    tts.write_to_fp(audio_buffer)
+
+    audio_bytes = audio_buffer.getvalue()
+    b64_string = base64.b64encode(audio_bytes).decode('utf-8')
+    data_uri = f"data:audio/mp3;base64,{b64_string}"
+    
+    socketio.emit('result', {"text": prediction_text,
+        "url": data_uri})
 
 if __name__ == "__main__":
     socketio.run(app, host="0.0.0.0", port=5000)
-
