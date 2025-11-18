@@ -190,7 +190,7 @@ continuousBtn.onclick = () => {
         sendingInterval = setInterval(() => {
             try {
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                const b64 = canvas.toDataURL('image/jpeg', 0.5).split(',')[1];
+                const b64 = canvas.toDataURL('image/jpeg', 1).split(',')[1];
                 
                 socket.emit('Letter_frame', { b64: b64 });
 
