@@ -149,7 +149,7 @@ text_to_display = ""
 previous_char = None
 char_occurrences_counter = 0
 predicted_character = None
-required_occurrences = 5
+required_occurrences = 10
 
 data_aux = []
 x_ = []
