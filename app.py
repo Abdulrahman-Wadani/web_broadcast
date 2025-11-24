@@ -24,7 +24,7 @@ from tensorflow.keras.layers import LSTM,Dense
 from tensorflow.keras.callbacks import TensorBoard
 
 #falsk app config
-app = Flask(__name__, static_url_path='/static')
+app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 
@@ -79,7 +79,19 @@ word_frames_count=0
 
 @app.route('/')
 def index():
-    return send_from_directory('static', 'broadcaster.html')
+    return send_from_directory('templates', 'index.html')
+
+@app.route('/translate')
+def translate_page():
+    return send_from_directory('templates', 'translate.html')
+
+@app.route('/train')
+def train_page():
+    return send_from_directory('templates', 'train.html')
+
+@app.route('/test')
+def test_page():
+    return send_from_directory('templates', 'test.html')
 
 @socketio.on('Word_frame')
 def predict(data):

@@ -1,0 +1,105 @@
+/* إعدادات عامة */
+body {
+    background-color: #121212;
+    color: #e0e0e0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+}
+
+/* العناوين */
+h1, h2 { color: #00e676; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; }
+
+/* الحاويات */
+.container { text-align: center; padding: 20px; width: 100%; max-width: 1200px; }
+
+/* أزرار القائمة الرئيسية (الكرت) */
+.menu-grid {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap;
+    margin-top: 50px;
+}
+
+.card-btn {
+    background: #1e1e1e;
+    border: 2px solid #333;
+    border-radius: 15px;
+    width: 250px;
+    height: 180px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-decoration: none;
+    color: #fff;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+}
+
+.card-btn:hover {
+    transform: translateY(-10px);
+    border-color: #00e676;
+    box-shadow: 0 0 20px rgba(0, 230, 118, 0.2);
+}
+
+.card-btn h3 { font-size: 1.5em; margin: 0; }
+.card-btn p { color: #aaa; font-size: 0.9em; margin-top: 10px; }
+
+/* أزرار التحكم (Start, Analysis) */
+button {
+    padding: 12px 25px;
+    font-size: 1.1em;
+    cursor: pointer;
+    background: #00e676;
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    transition: 0.3s;
+    min-width: 200px;
+    margin: 10px;
+}
+
+button:disabled { background: #444; color: #888; cursor: not-allowed; }
+button:hover:not(:disabled) { background: #00c853; transform: scale(1.05); }
+
+/* زر العودة */
+.back-btn {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: transparent;
+    border: 1px solid #555;
+    color: #888;
+    padding: 8px 15px;
+    min-width: auto;
+    font-size: 0.9em;
+}
+.back-btn:hover { border-color: #fff; color: #fff; background: transparent; transform: none; }
+
+/* الفيديو والنتائج */
+video { border: 3px solid #333; border-radius: 10px; background: #000; max-width: 100%; }
+#textResultDiv { 
+    background: #1e1e1e; 
+    padding: 20px; 
+    border-radius: 10px; 
+    border-left: 5px solid #00e676;
+    margin-top: 20px;
+    font-size: 1.5em;
+    min-height: 50px;
+}
+
+/* التبديل (Switch) */
+#toggleContainer { display: flex; justify-content: center; gap: 15px; margin: 20px 0; align-items: center;}
+.switch { position: relative; display: inline-block; width: 60px; height: 34px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .4s; border-radius: 34px; }
+.slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+input:checked + .slider { background-color: #00e676; }
+input:checked + .slider:before { transform: translateX(26px); }

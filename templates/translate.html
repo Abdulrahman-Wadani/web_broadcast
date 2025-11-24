@@ -1,0 +1,164 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Translate Mode</title>
+    <link rel="stylesheet" href="static/style.css">
+</head>
+<body>
+
+    <button class="back-btn" onclick="window.location.href='/'">← Back to Home</button>
+
+    <div class="container">
+        <h2>Live Translation</h2>
+        
+        <div style="position: relative; display: inline-block;">
+            <video id="video" autoplay playsinline muted width="960" height="540"></video>
+            <canvas id="canvas" width="1280" height="720" style="display:none;"></canvas>
+        </div>
+
+        <div>
+            <button id="startBtn">Start Camera</button>
+
+            <div id="toggleContainer" style="display:none;">
+                <span>Word</span>
+                <label class="switch">
+                    <input type="checkbox" id="modeToggle">
+                    <span class="slider round"></span>
+                </label>
+                <span>Letter</span>
+            </div>
+
+            <div id="buttonContainer" style="position: relative; height: 60px; margin-top: 10px;">
+                <button id="analysisBtnBurst" style="display:none;">Start Analysis</button>
+                <button id="analysisBtnContinuous" style="display:none;">Start Analysis</button>
+            </div>
+            
+            <div id="timerDiv" style="font-size: 2em; color: #00e676; height: 40px;"></div>
+            <div id="textResultDiv">Waiting for input...</div>
+        </div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script>
+        const socket = io();
+        const audioPlayer = new Audio();
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        const startBtn = document.getElementById('startBtn');
+        const timerDiv = document.getElementById('timerDiv');
+        const textResultDiv = document.getElementById('textResultDiv');
+        const toggleContainer = document.getElementById('toggleContainer');
+        const modeToggle = document.getElementById('modeToggle');
+        const burstBtn = document.getElementById('analysisBtnBurst');
+        const continuousBtn = document.getElementById('analysisBtnContinuous');
+
+        let sendingInterval = null;
+        let timerInterval = null;
+        let isStreaming = false;
+
+        startBtn.onclick = async () => {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 } } });  
+                video.srcObject = stream;
+                startBtn.style.display = 'none';
+                burstBtn.style.display = 'inline-block';
+                toggleContainer.style.display = 'flex'; 
+            } catch(e) {
+                textResultDiv.innerText = "Camera Error: " + e.message;
+                textResultDiv.style.color = 'red';
+            }
+        };
+
+        modeToggle.onchange = () => {
+            if (modeToggle.checked) { // Letter Mode
+                burstBtn.style.display = 'none';
+                continuousBtn.style.display = 'inline-block';
+            } else { // Word Mode
+                burstBtn.style.display = 'inline-block';
+                continuousBtn.style.display = 'none';
+            }
+        };
+
+        burstBtn.onclick = () => {
+    // تعطيل الأزرار وتجهيز الواجهة
+    burstBtn.disabled = true;
+    modeToggle.disabled = true;
+    textResultDiv.innerText = "Waiting for analysis...";
+    
+    // عداد بصري (شكل فقط للمستخدم) يبدأ من 4 لأن الوقت الفعلي 3.75
+    let countdown = 4;
+    timerDiv.innerText = countdown;
+
+    // متغير داخلي لحساب عدد الصور المرسلة فعلياً
+    let framesSent = 0;
+
+    // 1. تشغيل حلقة الإرسال بسرعة 8 إطارات في الثانية
+    sendingInterval = setInterval(() => {
+        // التقاط وإرسال الصورة
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const b64 = canvas.toDataURL('image/jpeg', 1).split(',')[1];
+        socket.emit('Word_frame', { b64: b64 }); 
+        
+        // زيادة العداد
+        framesSent++;
+
+        // 2. الشرط الحاسم: إذا وصلنا 30 صورة نتوقف فوراً
+        if (framesSent >= 30) {
+            stopRecording();
+        }
+    }, 1000 / 8); // <--- هنا السرعة 8 إطارات
+
+    // 3. تشغيل العداد البصري (للشكل فقط)
+    timerInterval = setInterval(() => {
+        countdown--;
+        if (countdown > 0) timerDiv.innerText = countdown;
+    }, 1000);
+
+    // دالة الإيقاف والتنظيف
+    function stopRecording() {
+        clearInterval(timerInterval);
+        clearInterval(sendingInterval);
+        burstBtn.disabled = false;
+        modeToggle.disabled = false;
+        timerDiv.innerText = "Done"; 
+    }
+};
+        continuousBtn.onclick = () => {
+            if (!isStreaming) {
+                isStreaming = true;
+                continuousBtn.innerText = "Stop Analysis";
+                continuousBtn.style.background = '#d32f2f'; // Red color
+                modeToggle.disabled = true;
+                timerDiv.innerText = "LIVE";
+                sendingInterval = setInterval(() => {
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    const b64 = canvas.toDataURL('image/jpeg', 1).split(',')[1];
+                    socket.emit('Letter_frame', { b64: b64 });
+                }, 1000 / 6);
+            } else {
+                isStreaming = false;
+                continuousBtn.innerText = "Start Analysis";
+                continuousBtn.style.background = '#00e676';
+                modeToggle.disabled = false;
+                timerDiv.innerText = "";
+                clearInterval(sendingInterval);
+            }
+        };
+
+        socket.on('result', (data) => {
+            if(typeof data === 'object'){
+                textResultDiv.innerText = data.text;
+                if (data.url) {
+                    audioPlayer.src = data.url;
+                    audioPlayer.play();
+                }
+            } else {
+                textResultDiv.innerText = data;
+            }
+        });
+    </script>
+</body>
+</html>
