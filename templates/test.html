@@ -1,18 +1,257 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Test Yourself</title>
-    <link rel="stylesheet" href="static/style.css">
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-<div class="nav-header">
-    <button class="back-btn" onclick="window.location.href='/'">
-        <span>🏠</span> Home
-    </button>
+
+    <div class="nav-header">
+        <button class="back-btn" onclick="window.location.href='/'">
+            <span>🏠</span> Home
+        </button>
     </div>
-        <div class="container">
-        <h1 style="margin-top: -80px;">Test Yourself</h1>
-        <p>Quiz interface coming soon.</p>
+
+    <div class="container">
+        <h1 style="margin-top: -80px;">Test Your Skills</h1>
+
+        <div id="toggleContainer" style="display:flex; justify-content:center; gap:15px; margin:20px 0; align-items:center;">
+            <span>Letters</span>
+            <label class="switch">
+                <input type="checkbox" id="modeToggle"> <span class="slider round"></span>
+            </label>
+            <span>Words</span>
+        </div>
+
+        <div class="target-box">
+            <div class="target-label">Perform this:</div>
+            <div class="target-word" id="targetDisplay">?</div>
+            
+            <button id="changeBtn" class="word-btn" onclick="generateRandomChallenge()" style="margin-top:15px; font-size:1rem; width:auto; height:auto; padding:8px 20px;">
+                🔄 Random
+            </button>
+
+            <hr style="border: 0; border-top: 1px solid #444; margin: 15px 0;">
+
+            <div style="display: flex; justify-content: center; gap: 10px; align-items: center;">
+                <button id="manualBtn" class="word-btn" onclick="setManualChallenge()" style="font-size:0.9rem; width:auto; height:auto; padding:8px 15px; background: #444;">
+                    Select
+                </button>
+                <select id="manualSelect" class="custom-select">
+                    </select>
+                
+            </div>
+        </div>
+
+        <div class="video-container" style="display:block;">
+            <div id="resultOverlay" class="result-overlay">
+                <span class="result-icon" id="resIcon">✅</span>
+                <div class="result-text" id="resText">Wait...</div>
+                <button class="word-btn" onclick="closeResult()" style="background: #333; border-color: #777;">Close</button>
+            </div>
+            
+            <video id="video" autoplay playsinline muted></video>
+            <canvas id="canvas" width="1280" height="720" style="display:none;"></canvas>
+            <div id="overlayTimer" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:5rem; color:#00e676; font-weight:bold; display:none;">3</div>
+        </div>
+
+        <div style="margin-top: 20px;">
+            <button id="actionBtn" class="word-btn" style="width: 300px; height: 70px; font-size: 1.5em; background: #2196f3; color: #000;">
+                Take Picture 📸
+            </button>
+        </div>
     </div>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script>
+        // 1. الاتصال بالسيرفر
+        const socket = io();
+        
+        socket.on('connect', () => {
+            console.log("✅ Connected to Server!");
+        });
+
+        // تعريف العناصر
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const modeToggle = document.getElementById('modeToggle');
+        const targetDisplay = document.getElementById('targetDisplay');
+        const actionBtn = document.getElementById('actionBtn');
+        const changeBtn = document.querySelector('.word-btn[onclick="generateRandomChallenge()"]');
+        const overlayTimer = document.getElementById('overlayTimer');
+        const resultOverlay = document.getElementById('resultOverlay');
+        const manualSelect = document.getElementById('manualSelect');
+        const manualBtn = document.getElementById('manualBtn');
+
+        const lettersList = [
+            "أ", "ب", "ت", "ث", "ج", "ح", "خ", "د", "ذ", "ر", "ز", "س", "ش", 
+            "ص", "ض", "ط", "ظ", "ع", "غ", "ف", "ق", "ك", "ل", "م", "ن", "ه", "و", "ي"
+        ];        
+        const wordsList = ["أنا", "هذا", "اريد", "شيء", "هنا", "الان", "لا", "في", "ماذا", "اخرس"];
+
+        let currentMode = 'letter';
+        let currentTarget = '';
+        let isProcessing = false;
+
+        // تشغيل الكاميرا
+        async function startCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720 } });
+                video.srcObject = stream;
+            } catch(e) { 
+                alert("❌ Camera Error: " + e.message); 
+            }
+        }
+        startCamera();
+
+        // التبديل
+        modeToggle.onchange = () => {
+            currentMode = modeToggle.checked ? 'word' : 'letter';
+            if(currentMode === 'word') {
+                actionBtn.innerText = "Start Performing 🎥";
+                actionBtn.style.background = "#00e676";
+            } else {
+                actionBtn.innerText = "Take Picture 📸";
+                actionBtn.style.background = "#2196f3";
+            }
+            generateRandomChallenge();
+            updateDropdownList();
+        };
+
+        // توليد تحدي
+        function generateRandomChallenge() {
+            const list = currentMode === 'word' ? wordsList : lettersList;
+            currentTarget = list[Math.floor(Math.random() * list.length)];
+            targetDisplay.innerText = currentTarget;
+            if(resultOverlay) resultOverlay.style.display = 'none';
+        }
+
+        // --- (جديد) دالة ملء القائمة ---
+        function updateDropdownList() {
+            const list = currentMode === 'word' ? wordsList : lettersList;
+            manualSelect.innerHTML = ""; // تفريغ القائمة
+            
+            list.forEach(item => {
+                const option = document.createElement("option");
+                option.value = item;
+                option.text = item;
+                manualSelect.appendChild(option);
+            });
+        }
+
+        // --- (جديد) دالة تطبيق الاختيار اليدوي ---
+        function setManualChallenge() {
+            const selectedValue = manualSelect.value;
+            if (selectedValue) {
+                currentTarget = selectedValue;
+                targetDisplay.innerText = currentTarget;
+                // إخفاء النتيجة القديمة
+                if(resultOverlay) resultOverlay.style.display = 'none';
+            }
+        }
+
+        // --- 2. عند ضغط الزر (Debug) ---
+        actionBtn.onclick = () => {
+            // فحص: هل الزر يستجيب؟
+            console.log("Button Pressed!"); 
+
+            if (isProcessing) return;
+            isProcessing = true;
+            actionBtn.disabled = true;
+            modeToggle.disabled = true;       
+            changeBtn.disabled = true;       
+            changeBtn.style.opacity = "0.5";
+            manualSelect.disabled = true;
+            manualBtn.disabled = true;  
+
+            if (currentMode === 'letter') {
+                startLetterProcess();
+            } else {
+                startWordProcess();
+            }
+        };
+
+        function startLetterProcess() {
+            let countdown = 3;
+            overlayTimer.style.display = 'block';
+            overlayTimer.innerText = countdown;
+
+            const timer = setInterval(() => {
+                countdown--;
+                if (countdown > 0) {
+                    overlayTimer.innerText = countdown;
+                } else {
+                    clearInterval(timer);
+                    overlayTimer.style.display = 'none';
+                    // التقاط وإرسال
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    const b64 = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
+                    
+                    console.log("Sending Letter to server..."); // فحص
+                    socket.emit('Test_Letter', { b64: b64, target: currentTarget });
+                }
+            }, 1000);
+        }
+
+        function startWordProcess() {
+            let frames = [];
+            let frameCount = 0;
+            actionBtn.innerText = "Recording...";
+            actionBtn.style.background = "#ff3d00";
+
+            const interval = setInterval(() => {
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                const b64 = canvas.toDataURL('image/jpeg', 0.5).split(',')[1];
+                frames.push(b64);
+                frameCount++;
+
+                if (frameCount >= 30) {
+                    clearInterval(interval);
+                    actionBtn.innerText = "Analyzing...";
+                    
+                    console.log("Sending Word Batch to server..."); // فحص
+                    socket.emit('Test_Word_Batch', { frames: frames, target: currentTarget });
+                }
+            }, 1000 / 8);
+        }
+
+        // --- 3. استقبال الرد ---
+        socket.on('test_response', (serverMessage) => {
+            console.log("Server responded:", serverMessage); // فحص
+            
+            isProcessing = false;
+            actionBtn.disabled = false;
+            modeToggle.disabled = false;     
+            changeBtn.disabled = false;     
+            changeBtn.style.opacity = "1";
+            manualSelect.disabled = false;
+            manualBtn.disabled = false;   
+            if (currentMode === 'word') {
+                actionBtn.innerText = "Start Performing 🎥";
+                actionBtn.style.background = "#00e676";
+            } else {
+                actionBtn.innerText = "Take Picture 📸";
+                actionBtn.style.background = "#2196f3";
+            }
+
+            // إظهار النتيجة
+            resultOverlay.style.display = 'block';
+            const resIcon = document.getElementById('resIcon');
+            const resText = document.getElementById('resText');
+
+
+            resText.innerText = serverMessage;
+        });
+
+        window.closeResult = function() {
+            resultOverlay.style.display = 'none';
+        };
+
+        // بدء
+        generateRandomChallenge();
+        updateDropdownList();
+    </script>
 </body>
 </html>

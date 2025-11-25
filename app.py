@@ -25,8 +25,11 @@ from tensorflow.keras.callbacks import TensorBoard
 
 #falsk app config
 app = Flask(__name__)
-socketio = SocketIO(app, cors_allowed_origins="*")
-
+socketio = SocketIO(
+    app,
+    cors_allowed_origins="*",
+    max_http_buffer_size=20_000_000  # حوالي 20 ميغابايت
+)
 
 # Recreate the model architecture before loading weights
 
@@ -270,7 +273,54 @@ def predict(data):
        except Exception as e:
            print("===============Second Exception==========================\n",e,"\n==========================================================")
     
+
+@socketio.on('Test_Letter')
+def handle_test_letter(data):
+
+    b64 = data.get("b64")
+    target_char = data.get("target")
+
+    if not b64:
+        socketio.emit('result', "Error: No b64 data")
+        return
+
+    try:
+        img_bytes = base64.b64decode(b64)
+        frame = cv2.imdecode(np.frombuffer(img_bytes, np.uint8), cv2.IMREAD_COLOR)
+        if frame is None: 
+            raise Exception("الصورة تالفة")
+    except Exception as e:
+        socketio.emit('result', f"Error: Bad image ({e})")
+        return
+
+
+
+    socketio.emit('test_response', "1")
+
+
+@socketio.on('Test_Word_Batch')
+def handle_test_word(data):
+    frames_b64 = data.get("frames") 
+    target_word = data.get("target")
+
+    frames_cv = []                
+
+    for b64 in frames_b64:
+        try:
+            img_bytes = base64.b64decode(b64)
+            frame = cv2.imdecode(np.frombuffer(img_bytes, np.uint8), cv2.IMREAD_COLOR)
+
+            if frame is None:
+                raise Exception("الصورة تالفة")
+
+            frames_cv.append(frame)
+
+        except Exception as e:
+            socketio.emit("test_response", f"Error decoding frame: {e}")
+            return
+
     
+    socketio.emit('test_response', "1")    
 
 if __name__ == "__main__":
     socketio.run(app, host="0.0.0.0", port=5000)
