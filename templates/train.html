@@ -1,14 +1,35 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Training</title>
-    <link rel="stylesheet" href="static/style.css">
+    <meta charset="UTF-8">
+    <title>Training Mode</title>
+    <link rel="stylesheet" href="/static/style.css"> 
 </head>
 <body>
-    <button class="back-btn" onclick="window.location.href='/'">← Back to Home</button>
+
+<div class="nav-header">
+    <button class="back-btn" onclick="window.location.href='/'">
+        <span>🏠</span> Home
+    </button>
+    </div>
+    
     <div class="container">
-        <h1>Training Mode</h1>
-        <p>Place your training dataset interface here.</p>
+        <h1 style="margin-top: -80px;">Training Center</h1>
+        <p style="color: #888;">Select your training path</p>
+
+        <div class="menu-grid">
+            <a href="/train/letters" class="card-btn">
+                <h3>Letters</h3>
+                <p>Practice Alphabet</p>
+                <span style="font-size: 2em;">🔤</span>
+            </a>
+
+            <a href="/train/words" class="card-btn">
+                <h3>Words</h3>
+                <p>Practice Vocabulary</p>
+                <span style="font-size: 2em;">💬</span>
+            </a>
+        </div>
     </div>
 </body>
 </html>

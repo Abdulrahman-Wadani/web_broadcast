@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Words Training</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+    <div class="nav-header">
+    <button class="back-btn" onclick="window.location.href='/'">
+        <span>🏠</span> Home
+    </button>
+
+    <button class="back-btn" onclick="window.location.href='/train'">
+        <span>⬅️</span> Training Menu
+    </button>
+</div>
+
+    <div class="container words-mode">
+        <h1 style="margin-top: -80px;">Words Training</h1>
+        
+        <div class="video-container">
+            <video id="wordVideo" class="training-video" playsinline muted>
+                <source src="" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        </div>
+
+        <div class="words-grid">
+            <button class="word-btn" onclick="playWord('أنا', this)">أنا</button>
+            <button class="word-btn" onclick="playWord('هذا', this)">هذا</button>
+            <button class="word-btn" onclick="playWord('اريد', this)">اريد</button>
+            <button class="word-btn" onclick="playWord('شيء', this)">شيء</button>
+            <button class="word-btn" onclick="playWord('هنا', this)">هنا</button>
+            <button class="word-btn" onclick="playWord('الان', this)">الان</button>
+            <button class="word-btn" onclick="playWord('لا', this)">لا</button>
+            <button class="word-btn" onclick="playWord('في', this)">في</button>
+            <button class="word-btn" onclick="playWord('ماذا', this)">ماذا</button>
+            <button class="word-btn" onclick="playWord('اخرس', this)">اخرس</button>
+        </div>
+    </div>
+
+    <script>
+        function playWord(wordName, btnElement) {
+            const videoPlayer = document.getElementById('wordVideo');
+
+            videoPlayer.src = `/static/words_videos/${wordName}.mp4`;
+
+            const videoContainer = document.querySelector('.video-container');
+            videoContainer.style.display = 'block';
+
+            videoPlayer.play();
+
+            document.querySelectorAll('.word-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            btnElement.classList.add('active');
+        }
+    </script>
+</body>
+</html>

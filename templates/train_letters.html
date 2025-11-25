@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl"> <head>
+    <meta charset="UTF-8">
+    <title>تدريب الحروف</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+    <div class="nav-header">
+    <button class="back-btn" onclick="window.location.href='/'">
+        <span>🏠</span> Home
+    </button>
+
+    <button class="back-btn" onclick="window.location.href='/train'">
+        <span>⬅️</span> Training Menu
+    </button>
+</div>
+
+    <div class="container">
+        <h1 style="margin-top: -80px;">تدريب الحروف العربية</h1>
+        <p style="color: #aaa;">اضغط على الحرف لعرض إشارة اليد الخاصة به</p>
+
+        <div class="training-container">
+            
+            <div class="image-display-area">
+                <img id="signImage" src="/static/letters/أ.png" alt="اختر حرفاً">
+            </div>
+
+            <div class="letters-grid">
+                <button class="letter-btn" onclick="showLetter('أ', this)">أ</button>
+                <button class="letter-btn" onclick="showLetter('ب', this)">ب</button>
+                <button class="letter-btn" onclick="showLetter('ت', this)">ت</button>
+                <button class="letter-btn" onclick="showLetter('ث', this)">ث</button>
+                <button class="letter-btn" onclick="showLetter('ج', this)">ج</button>
+                <button class="letter-btn" onclick="showLetter('ح', this)">ح</button>
+                <button class="letter-btn" onclick="showLetter('خ', this)">خ</button>
+                <button class="letter-btn" onclick="showLetter('د', this)">د</button>
+                <button class="letter-btn" onclick="showLetter('ذ', this)">ذ</button>
+                <button class="letter-btn" onclick="showLetter('ر', this)">ر</button>
+                <button class="letter-btn" onclick="showLetter('ز', this)">ز</button>
+                <button class="letter-btn" onclick="showLetter('س', this)">س</button>
+                <button class="letter-btn" onclick="showLetter('ش', this)">ش</button>
+                <button class="letter-btn" onclick="showLetter('ص', this)">ص</button>
+                <button class="letter-btn" onclick="showLetter('ض', this)">ض</button>
+                <button class="letter-btn" onclick="showLetter('ط', this)">ط</button>
+                <button class="letter-btn" onclick="showLetter('ظ', this)">ظ</button>
+                <button class="letter-btn" onclick="showLetter('ع', this)">ع</button>
+                <button class="letter-btn" onclick="showLetter('غ', this)">غ</button>
+                <button class="letter-btn" onclick="showLetter('ف', this)">ف</button>
+                <button class="letter-btn" onclick="showLetter('ق', this)">ق</button>
+                <button class="letter-btn" onclick="showLetter('ك', this)">ك</button>
+                <button class="letter-btn" onclick="showLetter('ل', this)">ل</button>
+                <button class="letter-btn" onclick="showLetter('م', this)">م</button>
+                <button class="letter-btn" onclick="showLetter('ن', this)">ن</button>
+                <button class="letter-btn" onclick="showLetter('ه', this)">هـ</button> 
+                <button class="letter-btn" onclick="showLetter('و', this)">و</button>
+                <button class="letter-btn" onclick="showLetter('ي', this)">ي</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showLetter(letter, btnElement) {
+            // 1. تغيير مصدر الصورة
+            const imgElement = document.getElementById('signImage');
+            
+            // ملاحظة: إذا كان اسم ملف الميم "م.png" عدل الزر في الأعلى ليكون 'م' بدلاً من 'm'
+            // قمت بوضع المسار بناءً على أن الصور داخل static/letters
+            imgElement.src = `/static/letters/${letter}.png`;
+            
+            // التعامل مع خطأ عدم وجود الصورة
+            imgElement.onerror = function() {
+                this.src = ''; // إخفاء الصورة المكسورة أو وضع صورة بديلة
+                this.alt = "الصورة غير متوفرة";
+            };
+
+            // 2. تلوين الزر النشط (Active)
+            // إزالة الكلاس active من كل الأزرار
+            document.querySelectorAll('.letter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            // إضافة الكلاس active للزر الذي تم ضغطه
+            btnElement.classList.add('active');
+        }
+
+        // تفعيل الحرف الأول تلقائياً عند التحميل
+        document.querySelector('.letter-btn').click();
+    </script>
+</body>
+</html>

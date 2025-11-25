@@ -4,3 +4,4 @@ eventlet
 opencv-python
 numpy
 onnxruntime
+gtts

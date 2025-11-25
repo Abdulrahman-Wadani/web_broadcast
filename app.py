@@ -86,12 +86,21 @@ def translate_page():
     return send_from_directory('templates', 'translate.html')
 
 @app.route('/train')
-def train_page():
+def train_hub():
     return send_from_directory('templates', 'train.html')
+
+@app.route('/train/letters')
+def train_letters():
+    return send_from_directory('templates', 'train_letters.html')
+
+@app.route('/train/words')
+def train_words():
+    return send_from_directory('templates', 'train_words.html')
 
 @app.route('/test')
 def test_page():
     return send_from_directory('templates', 'test.html')
+
 
 @socketio.on('Word_frame')
 def predict(data):

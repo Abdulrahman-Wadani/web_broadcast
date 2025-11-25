@@ -1,13 +1,19 @@
 /* إعدادات عامة */
 body {
-    background-color: #121212;
+    background-color: #121212; /* أو #111 حسب كودك */
     color: #e0e0e0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
     padding: 0;
+    
     display: flex;
     flex-direction: column;
     align-items: center;
+    
+    /* --- التعديل هنا --- */
+    /* كان center وهذا ما يسبب الفراغ، نغيره إلى flex-start ليبدأ من الأعلى */
+    justify-content: flex-start; 
+    
     min-height: 100vh;
 }
 
@@ -16,6 +22,13 @@ h1, h2 { color: #00e676; margin-bottom: 20px; text-transform: uppercase; letter-
 
 /* الحاويات */
 .container { text-align: center; padding: 20px; width: 100%; max-width: 1200px; }
+
+/* تنسيق خاص لحاوية تدريب الكلمات فقط */
+.container.words-mode {
+    min-height: 80vh;        /* الارتفاع المطلوب */
+    display: flex;           /* تفعيل الفليكس */
+    flex-direction: column;  /* ترتيب العناصر عمودياً */
+}
 
 /* أزرار القائمة الرئيسية (الكرت) */
 .menu-grid {
@@ -71,18 +84,38 @@ button:hover:not(:disabled) { background: #00c853; transform: scale(1.05); }
 
 /* زر العودة */
 .back-btn {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    background: transparent;
-    border: 1px solid #555;
-    color: #888;
-    padding: 8px 15px;
-    min-width: auto;
-    font-size: 0.9em;
-}
-.back-btn:hover { border-color: #fff; color: #fff; background: transparent; transform: none; }
+    /* 1. التخطيط والتوسيط */
+    display: inline-flex;       /* يجعل الزر مرناً */
+    align-items: center;        /* توسيط عمودي */
+    justify-content: center;    /* توسيط أفقي */
+    gap: 10px;                  /* مسافة متناسقة بين الأيقونة والنص */
 
+    /* 2. الحجم الملائم للنص */
+    width: auto;                /* العرض يتحدد حسب النص */
+    min-width: 120px;           /* أقل عرض ممكن (للحفاظ على هيبة الزر) */
+    padding: 12px 24px;         /* مساحة داخلية مريحة */
+
+    /* 3. الجماليات */
+    background-color: #1e1e1e;
+    color: #ffffff;
+    border: 1px solid #444;
+    border-radius: 50px;        /* حواف دائرية بالكامل (شكل كبسولة) */
+    
+    font-size: 1rem;
+    font-weight: 600;           /* خط عريض للقراءة الأفضل */
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+/* تأثير عند مرور الماوس */
+.back-btn:hover {
+    background-color: #2c2c2c;
+    border-color: #00e676;      /* لون أخضر عند التحويم */
+    color: #00e676;
+    transform: translateY(-3px); /* ارتفاع بسيط */
+    box-shadow: 0 5px 15px rgba(0, 230, 118, 0.15); /* ظل خفيف */
+}
 /* الفيديو والنتائج */
 video { border: 3px solid #333; border-radius: 10px; background: #000; max-width: 100%; }
 #textResultDiv { 
@@ -103,3 +136,158 @@ video { border: 3px solid #333; border-radius: 10px; background: #000; max-width
 .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
 input:checked + .slider { background-color: #00e676; }
 input:checked + .slider:before { transform: translateX(26px); }
+
+/* حاوية العرض الرئيسية: الصورة في الأعلى والحروف في الأسفل */
+.training-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+/* إطار الصورة المعروضة */
+.image-display-area {
+    width: 300px;
+    height: 350px;
+    background-color: #222;
+    border: 3px solid #00e676;
+    border-radius: 15px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    box-shadow: 0 0 20px rgba(0, 230, 118, 0.2);
+}
+
+.image-display-area img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+/* شبكة أزرار الحروف */
+.letters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(60px, 1fr)); /* تجعل الأزرار تتجاوب مع الشاشة */
+    gap: 10px;
+    width: 100%;
+    padding: 20px;
+    background: #1e1e1e;
+    border-radius: 15px;
+}
+
+/* تصميم زر الحرف الواحد */
+.letter-btn {
+    aspect-ratio: 1; /* يجعل الزر مربعاً */
+    background: #333;
+    color: #fff;
+    font-size: 1.5em;
+    border: 2px solid #555;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.2s;
+    display: flex;       /* لتوسيط الحرف */
+    justify-content: center;
+    align-items: center;
+    padding: 0;          /* إلغاء الـ padding القديم */
+    min-width: auto;     /* إلغاء العرض القديم */
+}
+
+.letter-btn:hover {
+    background: #444;
+    border-color: #00e676;
+    transform: scale(1.1);
+}
+
+.letter-btn.active {
+    background: #00e676;
+    color: #000;
+    font-weight: bold;
+    transform: scale(1.1);
+}
+
+.nav-header {
+    width: 100%;
+    display: flex;              /* جعل العناصر تصطف بجانب بعضها */
+    direction: ltr;
+    justify-content: flex-start; /* محاذاة لليمين أو اليسار حسب اللغة */
+    align-items: center;
+    padding: 20px;
+    gap: 15px;                  /* مسافة بين الزرين */
+    background: transparent;    /* خلفية شفافة */
+}
+
+/* حاوية الفيديو */
+.video-container {
+    width: 100%;
+    max-width: 700px; /* زدنا العرض قليلاً */
+    background: #000;
+    border: 3px solid #00e676;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 0 30px rgba(0, 230, 118, 0.15);
+    margin: 0 auto 30px auto; /* مسافة أكبر من الأسفل */
+    display: none;
+}
+
+/* الفيديو */
+.training-video {
+    width: 100%;
+    display: block;
+    max-height: 400px; /* تحديد ارتفاع أقصى حتى لا يغطي الشاشة */
+}
+
+/* النص "Playing: ..." */
+.current-word-display { 
+    font-size: 1.8em; 
+    color: #00e676; 
+    margin-bottom: 20px; 
+    height: 40px; 
+    font-weight: bold;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+/* شبكة الأزرار (تصحيح الترتيب) */
+.words-grid {
+    display: grid;
+    /* التعديل هنا: جعلنا الحد الأدنى 160 بكسل ليكون الزر مستطيلاً وواضحاً */
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 20px;
+    width: 90%;      /* جعلناها تأخذ مساحة أكبر من الشاشة */
+    max-width: 1000px;
+    margin: auto; 
+    margin-bottom: 150px;
+}
+
+/* تصميم الزر */
+.word-btn {
+    background: #1e1e1e;
+    color: #fff;
+    border: 2px solid #444; /* حدود واضحة */
+    padding: 15px 10px;
+    border-radius: 12px;
+    font-size: 1.3em;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+}
+
+/* عند مرور الماوس */
+.word-btn:hover { 
+    background: #333; 
+    border-color: #00e676; 
+    transform: translateY(-5px); 
+}
+
+/* عند تفعيل الزر */
+.word-btn.active { 
+    background: #00e676; 
+    color: #000; 
+    font-weight: bold; 
+    border-color: #00e676;
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(0, 230, 118, 0.5); 
+}

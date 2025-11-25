@@ -3,14 +3,18 @@
 <head>
     <meta charset="utf-8">
     <title>Translate Mode</title>
-    <link rel="stylesheet" href="static/style.css">
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 
-    <button class="back-btn" onclick="window.location.href='/'">← Back to Home</button>
+    <div class="nav-header">
+    <button class="back-btn" onclick="window.location.href='/'">
+        <span>🏠</span> Home
+    </button>
+    </div>
 
     <div class="container">
-        <h2>Live Translation</h2>
+        <h2 style="margin-top: -80px;">Live Translation</h2>
         
         <div style="position: relative; display: inline-block;">
             <video id="video" autoplay playsinline muted width="960" height="540"></video>
