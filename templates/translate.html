@@ -93,7 +93,7 @@
     textResultDiv.innerText = "Waiting for analysis...";
     
     // عداد بصري (شكل فقط للمستخدم) يبدأ من 4 لأن الوقت الفعلي 3.75
-    let countdown = 4;
+    let countdown = 3;
     timerDiv.innerText = countdown;
 
     // متغير داخلي لحساب عدد الصور المرسلة فعلياً
@@ -113,7 +113,7 @@
         if (framesSent >= 30) {
             stopRecording();
         }
-    }, 1000 / 8); // <--- هنا السرعة 8 إطارات
+    }, 1000 / 10); // <--- هنا السرعة 8 إطارات
 
     // 3. تشغيل العداد البصري (للشكل فقط)
     timerInterval = setInterval(() => {
@@ -139,7 +139,7 @@
                 timerDiv.innerText = "LIVE";
                 sendingInterval = setInterval(() => {
                     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                    const b64 = canvas.toDataURL('image/jpeg', 1).split(',')[1];
+                    const b64 = canvas.toDataURL('image/jpeg', 0.5).split(',')[1];
                     socket.emit('Letter_frame', { b64: b64 });
                 }, 1000 / 6);
             } else {
