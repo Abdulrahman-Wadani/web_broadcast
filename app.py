@@ -107,6 +107,9 @@ def test_page():
 
 @socketio.on('Word_frame')
 def predict(data):
+    print("frame received")
+    
+    global model
     
     global words
     
@@ -131,7 +134,6 @@ def predict(data):
 
     #1. Make detections
     with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=0.5) as holistic:
-        print(tf.test.gpu_device_name())
         
         results = mediapipe_detection(frame, holistic)  
         print(results)
