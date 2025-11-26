@@ -105,7 +105,7 @@ except Exception as e:
     print(f"⚠️  Letter model loaded (warm-up skipped: {e})\n")
 
 # Letter labels
-labels_dict = {0: 'ع', 1: 'ال', 2: 'ا', 3: 'ب', 4: 'د', 5: 'ظ', 6: 'ض', 7: 'ف', 
+labels_dict = {0: 'ع', 1: 'ال', 2: 'أ', 3: 'ب', 4: 'د', 5: 'ظ', 6: 'ض', 7: 'ف', 
                8: 'ق', 9: 'غ', 10: 'ه', 11: 'ح', 12: 'ج', 13: 'ك', 14: 'خ', 
                15: 'لا', 16: 'ل', 17: 'م', 18: 'ن', 19: 'ر', 20: 'ص', 21: 'س', 
                22: 'ش', 23: 'ت', 24: 'ط', 25: 'ث', 26: 'ذ', 27: 'ة', 28: 'و', 
@@ -461,7 +461,6 @@ def handle_test_word(data):
                 predicted_index = np.argmax(res)
                 confidence = res[predicted_index]
                 prediction_text = words[np.argmax(res)]
-                print(res)
                 
                 sequence=[]
                 
