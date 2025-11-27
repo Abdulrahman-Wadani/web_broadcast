@@ -1,77 +1,93 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>Test Yourself</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبر نفسك - نظام لغة الإشارة</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
+    <img src="/static/logo.png" class="ksu-logo" alt="شعار جامعة الملك سعود">
     
-    <img src="/static/logo.png" class="ksu-logo" alt="KSU Logo">
     <div class="nav-header">
         <button class="back-btn" onclick="window.location.href='/'">
-            <span>🏠</span> Home
+            <span>🏠</span> الرئيسية
         </button>
     </div>
 
     <div class="container">
-        <h1 style="margin-top: -80px;">Test Your Skills</h1>
+        <h1 style="margin-top: -60px;">اختبر مهاراتك</h1>
+        <p style="color: #888; margin-bottom: 20px;">
+            قم بأداء الإشارة المطلوبة وسيقوم النظام بتقييم أدائك
+        </p>
 
-        <div id="toggleContainer" style="display:flex; justify-content:center; gap:15px; margin:20px 0; align-items:center;">
-            <span>Letters</span>
+        <div id="toggleContainer">
+            <span>حروف</span>
             <label class="switch">
-                <input type="checkbox" id="modeToggle"> <span class="slider round"></span>
+                <input type="checkbox" id="modeToggle"> 
+                <span class="slider round"></span>
             </label>
-            <span>Words</span>
+            <span>كلمات</span>
         </div>
 
         <div class="target-box">
-            <div class="target-label">Perform this:</div>
-            <div class="target-word" id="targetDisplay">?</div>
+            <div class="target-label">قم بأداء:</div>
+            <div class="target-word" id="targetDisplay">؟</div>
             
-            <button id="changeBtn" class="word-btn" onclick="generateRandomChallenge()" style="margin-top:15px; font-size:1rem; width:auto; height:auto; padding:8px 20px;">
-                🔄 Random
+            <button id="changeBtn" class="word-btn" onclick="generateRandomChallenge()" 
+                    style="margin-top:15px; font-size:1rem; width:auto; height:auto; padding:8px 20px;">
+                🔄 عشوائي
             </button>
 
             <hr style="border: 0; border-top: 1px solid #444; margin: 15px 0;">
 
             <div style="display: flex; justify-content: center; gap: 10px; align-items: center;">
-                <button id="manualBtn" class="word-btn" onclick="setManualChallenge()" style="font-size:0.9rem; width:auto; height:auto; padding:8px 15px; background: #444;">
-                    Select
+                <button id="manualBtn" class="word-btn" onclick="setManualChallenge()" 
+                        style="font-size:0.9rem; width:auto; height:auto; padding:8px 15px; background: #444;">
+                    اختر
                 </button>
-                <select id="manualSelect" class="custom-select">
-                    </select>
-                
+                <select id="manualSelect" class="custom-select"></select>
             </div>
         </div>
 
         <div class="video-container" style="display:block;">
             <div id="resultOverlay" class="result-overlay">
-                <div class="result-text" id="resText">Wait...</div>
-                <button class="word-btn" onclick="closeResult()" style="background: #333; border-color: #777;">Close</button>
+                <div class="result-text" id="resText">انتظر...</div>
+                <button class="word-btn" onclick="closeResult()" 
+                        style="background: #333; border-color: #777;">إغلاق</button>
             </div>
-            <div id="overlayTimer" style="position: absolute; left: 50%; font-size:5rem; color:#0085d0; font-weight:bold; display:none;">3</div>
-            <video id="video" autoplay playsinline muted></video>
+            <div id="overlayTimer" 
+                 style="position: absolute; left: 50%; font-size:5rem; color:#0085d0; font-weight:bold; display:none;">3</div>
+            <video style="border: none; width: 100%; aspect-ratio: 16/9; background: #000; display: block;" id="video" autoplay playsinline muted></video>
             <canvas id="canvas" width="1280" height="720" style="display:none;"></canvas>
         </div>
 
         <div style="margin-top: 20px;">
-            <button id="actionBtn" class="word-btn" style="width: 300px; height: 70px; font-size: 1.5em; background: #0085d0; color: #000;">
-                Take Picture 📸
+            <button id="actionBtn" class="word-btn" 
+                    style="width: 300px; height: 70px; font-size: 1.5em; background: #0085d0; color: #000;">
+                📸 التقط صورة
             </button>
+        </div>
+
+        <div style="margin-top: 30px; padding: 20px; background: #1e1e1e; border-radius: 10px;">
+            <h4 style="color: #0085d0; margin-bottom: 10px;">📋 التعليمات:</h4>
+            <ul style="color: #aaa; text-align: right; line-height: 2;">
+                <li><strong>وضع الحروف:</strong> بعد الضغط على زر "التقط صورة" انتظر العد التنازلي ثم اثبت على الإشارة</li>
+                <li><strong>وضع الكلمات:</strong> بعد الضغط على زر "ابدأ الأداء" قم بأداء الإشارة كاملة خلال 3 ثوانٍ</li>
+                <li>استخدم زر "عشوائي" لاختيار تحدي عشوائي</li>
+                <li>أو اختر حرف/كلمة محددة من القائمة المنسدلة</li>
+            </ul>
         </div>
     </div>
 
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <script>
-        // 1. الاتصال بالسيرفر
         const socket = io();
         
         socket.on('connect', () => {
-            console.log("✅ Connected to Server!");
+            console.log("✅ متصل بالخادم");
         });
 
-        // تعريف العناصر
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
@@ -83,7 +99,6 @@
         const resultOverlay = document.getElementById('resultOverlay');
         const manualSelect = document.getElementById('manualSelect');
         const manualBtn = document.getElementById('manualBtn');
-        
 
         const lettersList = [
             "أ", "ب", "ت", "ث", "ج", "ح", "خ", "د", "ذ", "ر", "ز", "س", "ش", 
@@ -95,32 +110,31 @@
         let currentTarget = '';
         let isProcessing = false;
 
-        // تشغيل الكاميرا
         async function startCamera() {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 1280, height: 720 } });
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { width: 1280, height: 720 } 
+                });
                 video.srcObject = stream;
             } catch(e) { 
-                alert("❌ Camera Error: " + e.message); 
+                alert("❌ خطأ في الكاميرا: " + e.message); 
             }
         }
         startCamera();
 
-        // التبديل
         modeToggle.onchange = () => {
             currentMode = modeToggle.checked ? 'word' : 'letter';
             if(currentMode === 'word') {
-                actionBtn.innerText = "Start Performing 🎥";
+                actionBtn.innerText = "🎥 ابدأ الأداء";
                 actionBtn.style.background = "#0085d0";
             } else {
-                actionBtn.innerText = "Take Picture 📸";
+                actionBtn.innerText = "📸 التقط صورة";
                 actionBtn.style.background = "#0085d0";
             }
             generateRandomChallenge();
             updateDropdownList();
         };
 
-        // توليد تحدي
         function generateRandomChallenge() {
             const list = currentMode === 'word' ? wordsList : lettersList;
             currentTarget = list[Math.floor(Math.random() * list.length)];
@@ -128,10 +142,9 @@
             if(resultOverlay) resultOverlay.style.display = 'none';
         }
 
-        // --- (جديد) دالة ملء القائمة ---
         function updateDropdownList() {
             const list = currentMode === 'word' ? wordsList : lettersList;
-            manualSelect.innerHTML = ""; // تفريغ القائمة
+            manualSelect.innerHTML = "";
             
             list.forEach(item => {
                 const option = document.createElement("option");
@@ -141,22 +154,16 @@
             });
         }
 
-        // --- (جديد) دالة تطبيق الاختيار اليدوي ---
         function setManualChallenge() {
             const selectedValue = manualSelect.value;
             if (selectedValue) {
                 currentTarget = selectedValue;
                 targetDisplay.innerText = currentTarget;
-                // إخفاء النتيجة القديمة
                 if(resultOverlay) resultOverlay.style.display = 'none';
             }
         }
 
-        // --- 2. عند ضغط الزر (Debug) ---
         actionBtn.onclick = () => {
-            // فحص: هل الزر يستجيب؟
-            console.log("Button Pressed!"); 
-
             if (isProcessing) return;
             isProcessing = true;
             actionBtn.disabled = true;
@@ -185,11 +192,9 @@
                 } else {
                     clearInterval(timer);
                     overlayTimer.style.display = 'none';
-                    // التقاط وإرسال
                     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                     const b64 = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
                     
-                    console.log("Sending Letter to server..."); // فحص
                     socket.emit('Test_Letter', { b64: b64, target: currentTarget });
                 }
             }, 1000);
@@ -198,7 +203,7 @@
         function startWordProcess() {
             let frames = [];
             let frameCount = 0;
-            actionBtn.innerText = "Recording...";
+            actionBtn.innerText = "⏺ جارٍ التسجيل...";
             actionBtn.style.background = "#ff3d00";
 
             const interval = setInterval(() => {
@@ -209,18 +214,14 @@
 
                 if (frameCount >= 30) {
                     clearInterval(interval);
-                    actionBtn.innerText = "Analyzing...";
+                    actionBtn.innerText = "⏳ جارٍ التحليل...";
                     
-                    console.log("Sending Word Batch to server..."); // فحص
                     socket.emit('Test_Word_Batch', { frames: frames, target: currentTarget });
                 }
             }, 1000 / 8);
         }
 
-        // --- 3. استقبال الرد ---
         socket.on('test_response', (serverMessage) => {
-            console.log("Server responded:", serverMessage); // فحص
-            
             isProcessing = false;
             actionBtn.disabled = false;
             modeToggle.disabled = false;     
@@ -228,20 +229,17 @@
             changeBtn.style.opacity = "1";
             manualSelect.disabled = false;
             manualBtn.disabled = false;   
+            
             if (currentMode === 'word') {
-                actionBtn.innerText = "Start Performing 🎥";
+                actionBtn.innerText = "🎥 ابدأ الأداء";
                 actionBtn.style.background = "#0085d0";
             } else {
-                actionBtn.innerText = "Take Picture 📸";
+                actionBtn.innerText = "📸 التقط صورة";
                 actionBtn.style.background = "#0085d0";
             }
 
-            // إظهار النتيجة
             resultOverlay.style.display = 'block';
-            const resIcon = document.getElementById('resIcon');
             const resText = document.getElementById('resText');
-
-
             resText.innerText = serverMessage;
         });
 
@@ -249,7 +247,6 @@
             resultOverlay.style.display = 'none';
         };
 
-        // بدء
         generateRandomChallenge();
         updateDropdownList();
     </script>

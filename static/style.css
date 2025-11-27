@@ -1,165 +1,291 @@
-/* إعدادات عامة */
-body {
-    background-color: #121212; /* أو #111 حسب كودك */
-    color: #e0e0e0;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+/* ============================================================================
+   نظام الذكاء الاصطناعي للغة الإشارة العربية
+   ملف التصميم الرئيسي
+   ============================================================================ */
+
+/* الإعدادات العامة */
+* {
     margin: 0;
     padding: 0;
-    
+    box-sizing: border-box;
+}
+
+body {
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+    color: #e0e0e0;
+    font-family: 'Segoe UI', 'Cairo', Tahoma, Geneva, Verdana, sans-serif;
     display: flex;
     flex-direction: column;
     align-items: center;
-    
-    /* --- التعديل هنا --- */
-    /* كان center وهذا ما يسبب الفراغ، نغيره إلى flex-start ليبدأ من الأعلى */
-    justify-content: flex-start; 
-    overflow-x: hidden;
+    justify-content: flex-start;
     min-height: 100vh;
-    overflow-y: scroll;
+    overflow-x: hidden;
+    padding-top: 20px;
 }
 
 /* العناوين */
-h1, h2 { color: #0085d0; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; }
-
-/* الحاويات */
-.container { text-align: center; padding: 20px; width: 100%; max-width: 1200px; }
-
-/* تنسيق خاص لحاوية تدريب الكلمات فقط */
-.container.words-mode {
-    min-height: 80vh;        /* الارتفاع المطلوب */
-    display: flex;           /* تفعيل الفليكس */
-    flex-direction: column;  /* ترتيب العناصر عمودياً */
+h1, h2, h3 { 
+    color: #0085d0; 
+    margin-bottom: 15px; 
+    text-transform: uppercase; 
+    letter-spacing: 1px;
+    text-shadow: 0 2px 10px rgba(0, 133, 208, 0.3);
 }
 
-/* أزرار القائمة الرئيسية (الكرت) */
-.menu-grid {
+h1 { font-size: 2.5em; }
+h2 { font-size: 2em; }
+h3 { font-size: 1.5em; margin: 10px 0; }
+
+/* الحاويات */
+.container { 
+    text-align: center; 
+    padding: 20px; 
+    width: 100%; 
+    max-width: 1200px;
+}
+
+.container.words-mode {
+    min-height: 80vh;
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+}
+
+/* ============================================================================
+   شبكة القائمة الرئيسية
+   ============================================================================ */
+.menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 30px;
-    flex-wrap: wrap;
     margin-top: 50px;
+    padding: 0 20px;
 }
 
 .card-btn {
-    background: #1e1e1e;
+    background: linear-gradient(145deg, #1e1e1e, #252525);
     border: 2px solid #333;
-    border-radius: 15px;
-    width: 250px;
-    height: 180px;
+    border-radius: 20px;
+    padding: 40px 30px;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     text-decoration: none;
     color: #fff;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    position: relative;
+    overflow: hidden;
+}
+
+.card-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(0, 133, 208, 0.1), transparent);
+    transition: left 0.5s;
+}
+
+.card-btn:hover::before {
+    left: 100%;
 }
 
 .card-btn:hover {
-    transform: translateY(-10px);
+    transform: translateY(-10px) scale(1.02);
     border-color: #0085d0;
-    box-shadow: 0 0 20px rgba(0, 230, 118, 0.2);
+    box-shadow: 0 15px 40px rgba(0, 133, 208, 0.3);
 }
 
-.card-btn h3 { font-size: 1.5em; margin: 0; }
-.card-btn p { color: #aaa; font-size: 0.9em; margin-top: 10px; }
+.card-btn h3 { 
+    font-size: 1.6em; 
+    margin: 15px 0 5px 0;
+    color: #0085d0;
+}
 
-/* أزرار التحكم (Start, Analysis) */
+.card-btn p { 
+    color: #aaa; 
+    font-size: 1em; 
+    margin-top: 5px;
+    line-height: 1.5;
+}
+
+/* ============================================================================
+   الأزرار
+   ============================================================================ */
 button {
-    padding: 12px 25px;
+    padding: 14px 30px;
     font-size: 1.1em;
     cursor: pointer;
-    background: #0085d0;
-    color: #000;
+    background: linear-gradient(135deg, #0085d0, #0066a0);
+    color: #fff;
     border: none;
-    border-radius: 8px;
-    font-weight: bold;
-    transition: 0.3s;
+    border-radius: 12px;
+    font-weight: 600;
+    transition: all 0.3s ease;
     min-width: 200px;
     margin: 10px;
+    box-shadow: 0 4px 15px rgba(0, 133, 208, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-button:disabled { background: #444; color: #888; cursor: not-allowed; }
-button:hover:not(:disabled) { background: #0085d0; transform: scale(1.05); }
+button:disabled { 
+    background: #444; 
+    color: #888; 
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+button:hover:not(:disabled) { 
+    background: linear-gradient(135deg, #0099f0, #0077c0);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 133, 208, 0.4);
+}
+
+button:active:not(:disabled) {
+    transform: translateY(0);
+}
 
 /* زر العودة */
 .back-btn {
-    /* 1. التخطيط والتوسيط */
-    display: inline-flex;       /* يجعل الزر مرناً */
-    align-items: center;        /* توسيط عمودي */
-    justify-content: center;    /* توسيط أفقي */
-    gap: 10px;                  /* مسافة متناسقة بين الأيقونة والنص */
-
-    /* 2. الحجم الملائم للنص */
-    width: auto;                /* العرض يتحدد حسب النص */
-    min-width: 120px;           /* أقل عرض ممكن (للحفاظ على هيبة الزر) */
-    padding: 12px 24px;         /* مساحة داخلية مريحة */
-
-    /* 3. الجماليات */
-    background-color: #1e1e1e;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: auto;
+    min-width: 140px;
+    padding: 12px 24px;
+    background: linear-gradient(145deg, #1e1e1e, #252525);
     color: #ffffff;
     border: 1px solid #444;
-    border-radius: 50px;        /* حواف دائرية بالكامل (شكل كبسولة) */
-    
+    border-radius: 50px;
     font-size: 1rem;
-    font-weight: 600;           /* خط عريض للقراءة الأفضل */
+    font-weight: 600;
     cursor: pointer;
     text-decoration: none;
     transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 
-/* تأثير عند مرور الماوس */
 .back-btn:hover {
-    background-color: #2c2c2c;
-    border-color: #0085d0;      /* لون أخضر عند التحويم */
+    background: linear-gradient(145deg, #252525, #2c2c2c);
+    border-color: #0085d0;
     color: #0085d0;
-    transform: translateY(-3px); /* ارتفاع بسيط */
-    box-shadow: 0 5px 15px rgba(0, 230, 118, 0.15); /* ظل خفيف */
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 133, 208, 0.2);
 }
-/* الفيديو والنتائج */
-video { border: none solid #333; border-radius: 10px; background: #000; max-width: 100%; }
+
+/* ============================================================================
+   الفيديو والنتائج
+   ============================================================================ */
+video { 
+    border: 3px solid #0085d0;
+    border-radius: 15px; 
+    background: #000; 
+    max-width: 100%;
+    box-shadow: 0 10px 40px rgba(0, 133, 208, 0.3);
+}
+
 #textResultDiv { 
-    background: #1e1e1e; 
-    padding: 20px; 
-    border-radius: 10px; 
-    border-left: 5px solid #0085d0;
+    background: linear-gradient(145deg, #1e1e1e, #252525);
+    padding: 25px; 
+    border-radius: 15px; 
+    border-right: 5px solid #0085d0;
     margin-top: 20px;
-    font-size: 1.5em;
-    min-height: 50px;
+    font-size: 1.8em;
+    min-height: 60px;
+    font-weight: 600;
+    color: #0085d0;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+    direction: rtl;
 }
 
-/* التبديل (Switch) */
-#toggleContainer { display: flex; justify-content: center; gap: 15px; margin: 20px 0; align-items: center;}
-.switch { position: relative; display: inline-block; width: 60px; height: 34px; }
-.switch input { opacity: 0; width: 0; height: 0; }
-.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .4s; border-radius: 34px; }
-.slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
-input:checked + .slider { background-color: #0085d0; }
-input:checked + .slider:before { transform: translateX(26px); }
+/* ============================================================================
+   التبديل (Switch)
+   ============================================================================ */
+#toggleContainer { 
+    display: flex; 
+    justify-content: center; 
+    gap: 15px; 
+    margin: 30px 0; 
+    align-items: center;
+    font-size: 1.1em;
+    font-weight: 600;
+}
 
-/* حاوية العرض الرئيسية: الصورة في الأعلى والحروف في الأسفل */
+.switch { 
+    position: relative; 
+    display: inline-block; 
+    width: 70px; 
+    height: 38px;
+}
+
+.switch input { 
+    opacity: 0; 
+    width: 0; 
+    height: 0;
+}
+
+.slider { 
+    position: absolute; 
+    cursor: pointer; 
+    top: 0; 
+    left: 0; 
+    right: 0; 
+    bottom: 0; 
+    background: linear-gradient(145deg, #333, #3a3a3a);
+    transition: .4s; 
+    border-radius: 34px;
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.slider:before { 
+    position: absolute; 
+    content: ""; 
+    height: 30px; 
+    width: 30px; 
+    left: 4px; 
+    bottom: 4px; 
+    background: linear-gradient(145deg, #fff, #e0e0e0);
+    transition: .4s; 
+    border-radius: 50%;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+input:checked + .slider { 
+    background: linear-gradient(135deg, #0085d0, #0066a0);
+}
+
+input:checked + .slider:before { 
+    transform: translateX(32px);
+}
+
+/* ============================================================================
+   التدريب - الحروف
+   ============================================================================ */
 .training-container {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 20px;
+    gap: 30px;
     max-width: 1000px;
     margin: 0 auto;
 }
 
-/* إطار الصورة المعروضة */
 .image-display-area {
-    width: 300px;
-    height: 350px;
-    background-color: #222;
+    width: 320px;
+    height: 370px;
+    background: linear-gradient(145deg, #1a1a1a, #222);
     border: 3px solid #0085d0;
-    border-radius: 15px;
+    border-radius: 20px;
     display: flex;
     justify-content: center;
     align-items: center;
     overflow: hidden;
-    box-shadow: 0 0 20px rgba(0, 230, 118, 0.2);
+    box-shadow: 0 10px 40px rgba(0, 133, 208, 0.3);
 }
 
 .image-display-area img {
@@ -168,247 +294,284 @@ input:checked + .slider:before { transform: translateX(26px); }
     object-fit: contain;
 }
 
-/* شبكة أزرار الحروف */
 .letters-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(60px, 1fr)); /* تجعل الأزرار تتجاوب مع الشاشة */
-    gap: 10px;
+    grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+    gap: 12px;
     width: 100%;
-    padding: 20px;
-    background: #1e1e1e;
-    border-radius: 15px;
+    padding: 25px;
+    background: linear-gradient(145deg, #1e1e1e, #252525);
+    border-radius: 20px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
 }
 
-/* تصميم زر الحرف الواحد */
 .letter-btn {
-    aspect-ratio: 1; /* يجعل الزر مربعاً */
-    background: #333;
+    aspect-ratio: 1;
+    background: linear-gradient(145deg, #2a2a2a, #333);
     color: #fff;
-    font-size: 1.5em;
-    border: 2px solid #555;
-    border-radius: 10px;
+    font-size: 1.8em;
+    border: 2px solid #444;
+    border-radius: 12px;
     cursor: pointer;
-    transition: 0.2s;
-    display: flex;       /* لتوسيط الحرف */
+    transition: all 0.3s ease;
+    display: flex;
     justify-content: center;
     align-items: center;
-    padding: 0;          /* إلغاء الـ padding القديم */
-    min-width: auto;     /* إلغاء العرض القديم */
+    padding: 0;
+    min-width: auto;
+    font-weight: 600;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 
 .letter-btn:hover {
-    background: #444;
+    background: linear-gradient(145deg, #333, #3a3a3a);
     border-color: #0085d0;
-    transform: scale(1.1);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0, 133, 208, 0.3);
 }
 
 .letter-btn.active {
-    background: #0085d0;
-    color: #000;
+    background: linear-gradient(135deg, #0085d0, #0066a0);
+    color: #fff;
     font-weight: bold;
-    transform: scale(1.1);
+    transform: scale(1.05);
+    box-shadow: 0 8px 25px rgba(0, 133, 208, 0.5);
+    border-color: #0085d0;
 }
 
-.nav-header {
-    width: 100%;
-    display: flex;              /* جعل العناصر تصطف بجانب بعضها */
-    direction: ltr;
-    justify-content: flex-start; /* محاذاة لليمين أو اليسار حسب اللغة */
-    align-items: center;
-    padding: 20px;
-    gap: 15px;                  /* مسافة بين الزرين */
-    background: transparent;    /* خلفية شفافة */
-}
-
-/* حاوية الفيديو */
+/* ============================================================================
+   التدريب - الكلمات
+   ============================================================================ */
 .video-container {
     width: 100%;
-    max-width: 700px; /* زدنا العرض قليلاً */
+    max-width: 800px;
     background: #000;
     border: 3px solid #0085d0;
-    border-radius: 15px;
+    border-radius: 20px;
     overflow: hidden;
-    box-shadow: 0 0 30px rgba(0, 230, 118, 0.15);
-    margin: 0 auto 30px auto; /* مسافة أكبر من الأسفل */
+    box-shadow: 0 10px 40px rgba(0, 133, 208, 0.3);
+    margin: 0 auto 40px auto;
     display: none;
+    position: relative;
     aspect-ratio: 16 / 9;
 }
 
-/* الفيديو */
 .training-video {
     width: 100%;
     height: 100%;
     display: block;
-    max-height: 400px; /* تحديد ارتفاع أقصى حتى لا يغطي الشاشة */
 }
 
-/* النص "Playing: ..." */
 .current-word-display { 
-    font-size: 1.8em; 
+    font-size: 2em; 
     color: #0085d0; 
-    margin-bottom: 20px; 
-    height: 40px; 
+    margin-bottom: 25px; 
+    height: 50px; 
     font-weight: bold;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    text-shadow: 0 3px 10px rgba(0, 133, 208, 0.5);
 }
 
-/* شبكة الأزرار (تصحيح الترتيب) */
 .words-grid {
     display: grid;
-    /* التعديل هنا: جعلنا الحد الأدنى 160 بكسل ليكون الزر مستطيلاً وواضحاً */
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     gap: 20px;
-    width: 90%;      /* جعلناها تأخذ مساحة أكبر من الشاشة */
+    width: 90%;
     max-width: 1000px;
-    margin: auto; 
-    margin-bottom: 150px;
+    margin: auto;
+    margin-bottom: 50px;
 }
 
-/* تصميم الزر */
 .word-btn {
-    background: #1e1e1e;
+    background: linear-gradient(145deg, #1e1e1e, #252525);
     color: #fff;
-    border: 2px solid #444; /* حدود واضحة */
-    padding: 15px 10px;
-    border-radius: 12px;
-    font-size: 1.3em;
+    border: 2px solid #444;
+    padding: 18px 12px;
+    border-radius: 15px;
+    font-size: 1.4em;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
     text-align: center;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    font-weight: 600;
 }
 
-/* عند مرور الماوس */
 .word-btn:hover { 
-    background: #333; 
+    background: linear-gradient(145deg, #252525, #2c2c2c);
     border-color: #0085d0; 
-    transform: translateY(-5px); 
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 133, 208, 0.3);
 }
 
-/* عند تفعيل الزر */
 .word-btn.active { 
-    background: #0085d0; 
-    color: #000; 
+    background: linear-gradient(135deg, #0085d0, #0066a0);
+    color: #fff; 
     font-weight: bold; 
     border-color: #0085d0;
     transform: scale(1.05);
-    box-shadow: 0 0 20px rgba(0, 133, 208, 0.5); 
+    box-shadow: 0 10px 30px rgba(0, 133, 208, 0.5);
 }
 
-/* الصندوق الذي يظهر الكلمة/الحرف المطلوب */
+/* ============================================================================
+   الاختبار
+   ============================================================================ */
 .target-box {
-    background: #222;
-    border: 2px dashed #0085d0;
-    padding: 20px;
-    border-radius: 15px;
-    margin: 20px auto;
-    width: 80%;
-    max-width: 600px;
+    background: linear-gradient(145deg, #1a1a1a, #222);
+    border: 3px dashed #0085d0;
+    padding: 30px;
+    border-radius: 20px;
+    margin: 30px auto;
+    width: 85%;
+    max-width: 650px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
 }
 
 .target-label {
     color: #aaa;
-    font-size: 1rem;
-    margin-bottom: 5px;
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+    font-weight: 600;
 }
 
 .target-word {
     color: #fff;
-    font-size: 3rem;
+    font-size: 3.5rem;
     font-weight: bold;
+    text-shadow: 0 4px 15px rgba(0, 133, 208, 0.5);
+    margin: 10px 0;
 }
 
-/* صندوق النتيجة (صح/خطأ) */
 .result-overlay {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: rgba(0, 0, 0, 0.85);
-    padding: 30px;
-    border-radius: 20px;
+    background: rgba(0, 0, 0, 0.95);
+    padding: 40px;
+    border-radius: 25px;
     text-align: center;
-    display: none; /* مخفي افتراضياً */
+    display: none;
     z-index: 10;
-    min-width: 300px;
-    border: 2px solid #555;
+    min-width: 350px;
+    border: 3px solid #555;
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.8);
 }
 
-.result-icon { font-size: 4rem; margin-bottom: 10px; display: block; }
-.result-text { font-size: 1.5rem; color: #fff; margin-bottom: 20px; }
-.correct { color: #0085d0; border-color: #0085d0; }
-.wrong { color: #ff3d00; border-color: #ff3d00; }
+.result-text { 
+    font-size: 1.6rem; 
+    color: #fff; 
+    margin-bottom: 25px;
+    line-height: 1.6;
+}
 
-/* تنسيق القائمة المنسدلة */
 .custom-select {
-    background-color: #1e1e1e;
+    background: linear-gradient(145deg, #1e1e1e, #252525);
     color: #fff;
-    border: 1px solid #0085d0;
-    padding: 8px 10px;
-    border-radius: 8px;
-    font-size: 1rem;
+    border: 2px solid #0085d0;
+    padding: 10px 15px;
+    border-radius: 12px;
+    font-size: 1.1rem;
     outline: none;
     cursor: pointer;
-    min-width: 120px;
+    min-width: 150px;
     text-align: center;
+    font-weight: 600;
+    transition: all 0.3s ease;
 }
 
 .custom-select:hover {
-    background-color: #2c2c2c;
+    background: linear-gradient(145deg, #252525, #2c2c2c);
+    border-color: #00a0ff;
+}
+
+/* ============================================================================
+   الهيدر والشعار
+   ============================================================================ */
+.nav-header {
+    width: 100%;
+    display: flex;
+    direction: ltr;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 20px;
+    gap: 15px;
+    background: transparent;
 }
 
 .ksu-logo {
-    position: absolute; /* تثبيت حر */
-    top: 20px;          /* المسافة من الأعلى */
-    right: 30px;        /* المسافة من اليمين */
-    width: 160px;       /* حجم الشعار (عدله حسب رغبتك) */
-    height: auto;       /* الحفاظ على الأبعاد */
-    z-index: 2000;      /* ضمان ظهوره فوق كل العناصر */
-    
-    /* تحسينات جمالية */
-    filter: drop-shadow(0 0 5px rgba(0, 133, 208, 0.5)); /* ظل أزرق خفيف حول الشعار */
-    opacity: 0.9;
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    width: 160px;
+    height: auto;
+    z-index: 2000;
+    filter: drop-shadow(0 0 10px rgba(0, 133, 208, 0.5));
+    opacity: 0.95;
     transition: all 0.3s ease;
 }
 
 .ksu-logo:hover {
     opacity: 1;
-    transform: scale(1.05); /* تكبير بسيط عند المرور */
+    transform: scale(1.05);
+    filter: drop-shadow(0 0 15px rgba(0, 133, 208, 0.7));
 }
 
-/* تحسين للجوال: تصغير الشعار قليلاً في الشاشات الصغيرة */
+/* ============================================================================
+   شريط التمرير
+   ============================================================================ */
+::-webkit-scrollbar {
+    width: 12px;
+}
+
+::-webkit-scrollbar-track {
+    background: #0a0a0a;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #333, #555);
+    border-radius: 6px;
+    border: 2px solid #0a0a0a;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #0085d0, #0066a0);
+}
+
+html {
+    scrollbar-width: thin;
+    scrollbar-color: #333 #0a0a0a;
+}
+
+/* ============================================================================
+   الاستجابة للشاشات الصغيرة
+   ============================================================================ */
 @media (max-width: 768px) {
+    h1 { font-size: 1.8em; }
+    h2 { font-size: 1.5em; }
+    
+    .menu-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+        padding: 0 15px;
+    }
+    
     .ksu-logo {
-        width: 70px;
+        width: 80px;
         top: 15px;
         right: 15px;
     }
-}
-
-/* عرض الشريط */
-::-webkit-scrollbar {
-    width: 10px;
-}
-
-/* مسار الشريط (الخلفية) */
-::-webkit-scrollbar-track {
-    background: #121212; /* نفس لون خلفية الموقع */
-}
-
-/* المقبض (الجزء المتحرك) */
-::-webkit-scrollbar-thumb {
-    background: #333;    /* لون رمادي هادئ */
-    border-radius: 5px;  /* حواف دائرية */
-    border: 2px solid #121212; /* حدود لعمل مسافة جمالية */
-}
-
-/* عند مرور الماوس على المقبض */
-::-webkit-scrollbar-thumb:hover {
-    background: #0085d0; /* يتحول للأزرق (لون الجامعة) */
-}
-
-/* دعم متصفح Firefox */
-html {
-    scrollbar-width: thin;
-    scrollbar-color: #333 #121212;
+    
+    .target-word {
+        font-size: 2.5rem;
+    }
+    
+    .words-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 15px;
+    }
+    
+    button {
+        min-width: 160px;
+        padding: 12px 20px;
+        font-size: 1em;
+    }
 }

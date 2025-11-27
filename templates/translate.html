@@ -1,20 +1,25 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
 <head>
-    <meta charset="utf-8">
-    <title>Translate Mode</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الترجمة المباشرة - نظام لغة الإشارة</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <img src="/static/logo.png" class="ksu-logo" alt="KSU Logo">
+    <img src="/static/logo.png" class="ksu-logo" alt="شعار جامعة الملك سعود">
+    
     <div class="nav-header">
-    <button class="back-btn" onclick="window.location.href='/'">
-        <span>🏠</span> Home
-    </button>
+        <button class="back-btn" onclick="window.location.href='/'">
+            <span>🏠</span> الرئيسية
+        </button>
     </div>
 
     <div class="container">
-        <h2 style="margin-top: -80px;">Live Translation</h2>
+        <h2 style="margin-top: -60px;">الترجمة المباشرة</h2>
+        <p style="color: #888; margin-bottom: 30px;">
+            قم بأداء الإشارات أمام الكاميرا وسيقوم النظام بترجمتها فوراً
+        </p>
         
         <div style="position: relative; display: inline-block;">
             <video id="video" autoplay playsinline muted width="960" height="540"></video>
@@ -22,24 +27,34 @@
         </div>
 
         <div>
-            <button id="startBtn">Start Camera</button>
+            <button id="startBtn">🎥 تشغيل الكاميرا</button>
 
             <div id="toggleContainer" style="display:none;">
-                <span>Word</span>
+                <span>كلمة</span>
                 <label class="switch">
                     <input type="checkbox" id="modeToggle">
                     <span class="slider round"></span>
                 </label>
-                <span>Letter</span>
+                <span>حرف</span>
             </div>
 
             <div id="buttonContainer" style="position: relative; height: 60px; margin-top: 10px;">
-                <button id="analysisBtnBurst" style="display:none;">Start Analysis</button>
-                <button id="analysisBtnContinuous" style="display:none;">Start Analysis</button>
+                <button id="analysisBtnBurst" style="display:none;">🔍 بدء التحليل</button>
+                <button id="analysisBtnContinuous" style="display:none;">🔍 بدء التحليل</button>
             </div>
             
-            <div id="timerDiv" style="font-size: 2em; color: #00e676; height: 40px;"></div>
-            <div id="textResultDiv">Waiting for input...</div>
+            <div id="timerDiv" style="font-size: 2em; color: #0085d0; height: 40px; font-weight: bold;"></div>
+            <div id="textResultDiv">في انتظار الإدخال...</div>
+        </div>
+
+        <div style="margin-top: 30px; padding: 20px; background: #1e1e1e; border-radius: 10px;">
+            <h4 style="color: #0085d0; margin-bottom: 10px;">💡 إرشادات الاستخدام:</h4>
+            <ul style="color: #aaa; text-align: right; line-height: 2;">
+                <li><strong>وضع الكلمة:</strong> قم بأداء الإشارة كاملة خلال 3 ثوانٍ</li>
+                <li><strong>وضع الحرف:</strong> اثبت على إشارة الحرف لثانيتين، ارفع يديك معاً لتحويل النص إلى صوت</li>
+                <li>تأكد من وضوح يديك أمام الكاميرا</li>
+                <li>تجنب الإضاءة الخلفية القوية</li>
+            </ul>
         </div>
     </div>
 
@@ -63,80 +78,78 @@
         let timerInterval = null;
         let isStreaming = false;
 
+        socket.on('connect', () => {
+            console.log("✅ تم الاتصال بالخادم");
+        });
+
         startBtn.onclick = async () => {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 1280 }, height: { ideal: 720 } } });  
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { width: { ideal: 1280 }, height: { ideal: 720 } } 
+                });  
                 video.srcObject = stream;
                 startBtn.style.display = 'none';
                 burstBtn.style.display = 'inline-block';
                 toggleContainer.style.display = 'flex'; 
+                textResultDiv.innerText = "جاهز للترجمة...";
             } catch(e) {
-                textResultDiv.innerText = "Camera Error: " + e.message;
+                textResultDiv.innerText = "خطأ في الكاميرا: " + e.message;
                 textResultDiv.style.color = 'red';
             }
         };
 
         modeToggle.onchange = () => {
-            if (modeToggle.checked) { // Letter Mode
+            if (modeToggle.checked) {
                 burstBtn.style.display = 'none';
                 continuousBtn.style.display = 'inline-block';
-            } else { // Word Mode
+            } else {
                 burstBtn.style.display = 'inline-block';
                 continuousBtn.style.display = 'none';
             }
         };
 
         burstBtn.onclick = () => {
-    // تعطيل الأزرار وتجهيز الواجهة
-    burstBtn.disabled = true;
-    modeToggle.disabled = true;
-    textResultDiv.innerText = "Waiting for analysis...";
-    
-    // عداد بصري (شكل فقط للمستخدم) يبدأ من 4 لأن الوقت الفعلي 3.75
-    let countdown = 3;
-    timerDiv.innerText = countdown;
+            burstBtn.disabled = true;
+            modeToggle.disabled = true;
+            textResultDiv.innerText = "جارٍ التحليل...";
+            
+            let countdown = 3;
+            timerDiv.innerText = countdown;
+            let framesSent = 0;
 
-    // متغير داخلي لحساب عدد الصور المرسلة فعلياً
-    let framesSent = 0;
+            sendingInterval = setInterval(() => {
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                const b64 = canvas.toDataURL('image/jpeg', 0.5).split(',')[1];
+                socket.emit('Word_frame', { b64: b64 }); 
+                
+                framesSent++;
+                if (framesSent >= 30) {
+                    stopRecording();
+                }
+            }, 1000 / 10);
 
-    // 1. تشغيل حلقة الإرسال بسرعة 8 إطارات في الثانية
-    sendingInterval = setInterval(() => {
-        // التقاط وإرسال الصورة
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const b64 = canvas.toDataURL('image/jpeg', 0.5).split(',')[1];
-        socket.emit('Word_frame', { b64: b64 }); 
-        
-        // زيادة العداد
-        framesSent++;
+            timerInterval = setInterval(() => {
+                countdown--;
+                if (countdown > 0) timerDiv.innerText = countdown;
+            }, 1000);
 
-        // 2. الشرط الحاسم: إذا وصلنا 30 صورة نتوقف فوراً
-        if (framesSent >= 30) {
-            stopRecording();
-        }
-    }, 1000 / 10); // <--- هنا السرعة 8 إطارات
+            function stopRecording() {
+                clearInterval(timerInterval);
+                clearInterval(sendingInterval);
+                burstBtn.disabled = false;
+                modeToggle.disabled = false;
+                timerDiv.innerText = "تم ✓"; 
+            }
+        };
 
-    // 3. تشغيل العداد البصري (للشكل فقط)
-    timerInterval = setInterval(() => {
-        countdown--;
-        if (countdown > 0) timerDiv.innerText = countdown;
-    }, 1000);
-
-    // دالة الإيقاف والتنظيف
-    function stopRecording() {
-        clearInterval(timerInterval);
-        clearInterval(sendingInterval);
-        burstBtn.disabled = false;
-        modeToggle.disabled = false;
-        timerDiv.innerText = "Done"; 
-    }
-};
         continuousBtn.onclick = () => {
             if (!isStreaming) {
                 isStreaming = true;
-                continuousBtn.innerText = "Stop Analysis";
-                continuousBtn.style.background = '#d32f2f'; // Red color
+                continuousBtn.innerText = "⏹ إيقاف التحليل";
+                continuousBtn.style.background = '#d32f2f';
                 modeToggle.disabled = true;
-                timerDiv.innerText = "LIVE";
+                timerDiv.innerText = "مباشر 🔴";
+                
                 sendingInterval = setInterval(() => {
                     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                     const b64 = canvas.toDataURL('image/jpeg', 0.5).split(',')[1];
@@ -144,8 +157,8 @@
                 }, 1000 / 6);
             } else {
                 isStreaming = false;
-                continuousBtn.innerText = "Start Analysis";
-                continuousBtn.style.background = '#00e676';
+                continuousBtn.innerText = "🔍 بدء التحليل";
+                continuousBtn.style.background = '#0085d0';
                 modeToggle.disabled = false;
                 timerDiv.innerText = "";
                 clearInterval(sendingInterval);
@@ -154,7 +167,7 @@
 
         socket.on('result', (data) => {
             if(typeof data === 'object'){
-                textResultDiv.innerText = data.text;
+                textResultDiv.innerText = data.text || "في انتظار الإدخال...";
                 if (data.url) {
                     audioPlayer.src = data.url;
                     audioPlayer.play();
