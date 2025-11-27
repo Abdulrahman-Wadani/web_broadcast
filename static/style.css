@@ -13,12 +13,13 @@ body {
     /* --- التعديل هنا --- */
     /* كان center وهذا ما يسبب الفراغ، نغيره إلى flex-start ليبدأ من الأعلى */
     justify-content: flex-start; 
-    
+    overflow-x: hidden;
     min-height: 100vh;
+    overflow-y: scroll;
 }
 
 /* العناوين */
-h1, h2 { color: #00e676; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; }
+h1, h2 { color: #0085d0; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1px; }
 
 /* الحاويات */
 .container { text-align: center; padding: 20px; width: 100%; max-width: 1200px; }
@@ -57,7 +58,7 @@ h1, h2 { color: #00e676; margin-bottom: 20px; text-transform: uppercase; letter-
 
 .card-btn:hover {
     transform: translateY(-10px);
-    border-color: #00e676;
+    border-color: #0085d0;
     box-shadow: 0 0 20px rgba(0, 230, 118, 0.2);
 }
 
@@ -69,7 +70,7 @@ button {
     padding: 12px 25px;
     font-size: 1.1em;
     cursor: pointer;
-    background: #00e676;
+    background: #0085d0;
     color: #000;
     border: none;
     border-radius: 8px;
@@ -80,7 +81,7 @@ button {
 }
 
 button:disabled { background: #444; color: #888; cursor: not-allowed; }
-button:hover:not(:disabled) { background: #00c853; transform: scale(1.05); }
+button:hover:not(:disabled) { background: #0085d0; transform: scale(1.05); }
 
 /* زر العودة */
 .back-btn {
@@ -111,18 +112,18 @@ button:hover:not(:disabled) { background: #00c853; transform: scale(1.05); }
 /* تأثير عند مرور الماوس */
 .back-btn:hover {
     background-color: #2c2c2c;
-    border-color: #00e676;      /* لون أخضر عند التحويم */
-    color: #00e676;
+    border-color: #0085d0;      /* لون أخضر عند التحويم */
+    color: #0085d0;
     transform: translateY(-3px); /* ارتفاع بسيط */
     box-shadow: 0 5px 15px rgba(0, 230, 118, 0.15); /* ظل خفيف */
 }
 /* الفيديو والنتائج */
-video { border: 3px solid #333; border-radius: 10px; background: #000; max-width: 100%; }
+video { border: none solid #333; border-radius: 10px; background: #000; max-width: 100%; }
 #textResultDiv { 
     background: #1e1e1e; 
     padding: 20px; 
     border-radius: 10px; 
-    border-left: 5px solid #00e676;
+    border-left: 5px solid #0085d0;
     margin-top: 20px;
     font-size: 1.5em;
     min-height: 50px;
@@ -134,7 +135,7 @@ video { border: 3px solid #333; border-radius: 10px; background: #000; max-width
 .switch input { opacity: 0; width: 0; height: 0; }
 .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .4s; border-radius: 34px; }
 .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
-input:checked + .slider { background-color: #00e676; }
+input:checked + .slider { background-color: #0085d0; }
 input:checked + .slider:before { transform: translateX(26px); }
 
 /* حاوية العرض الرئيسية: الصورة في الأعلى والحروف في الأسفل */
@@ -152,7 +153,7 @@ input:checked + .slider:before { transform: translateX(26px); }
     width: 300px;
     height: 350px;
     background-color: #222;
-    border: 3px solid #00e676;
+    border: 3px solid #0085d0;
     border-radius: 15px;
     display: flex;
     justify-content: center;
@@ -197,12 +198,12 @@ input:checked + .slider:before { transform: translateX(26px); }
 
 .letter-btn:hover {
     background: #444;
-    border-color: #00e676;
+    border-color: #0085d0;
     transform: scale(1.1);
 }
 
 .letter-btn.active {
-    background: #00e676;
+    background: #0085d0;
     color: #000;
     font-weight: bold;
     transform: scale(1.1);
@@ -224,17 +225,19 @@ input:checked + .slider:before { transform: translateX(26px); }
     width: 100%;
     max-width: 700px; /* زدنا العرض قليلاً */
     background: #000;
-    border: 3px solid #00e676;
+    border: 3px solid #0085d0;
     border-radius: 15px;
     overflow: hidden;
     box-shadow: 0 0 30px rgba(0, 230, 118, 0.15);
     margin: 0 auto 30px auto; /* مسافة أكبر من الأسفل */
     display: none;
+    aspect-ratio: 16 / 9;
 }
 
 /* الفيديو */
 .training-video {
     width: 100%;
+    height: 100%;
     display: block;
     max-height: 400px; /* تحديد ارتفاع أقصى حتى لا يغطي الشاشة */
 }
@@ -242,7 +245,7 @@ input:checked + .slider:before { transform: translateX(26px); }
 /* النص "Playing: ..." */
 .current-word-display { 
     font-size: 1.8em; 
-    color: #00e676; 
+    color: #0085d0; 
     margin-bottom: 20px; 
     height: 40px; 
     font-weight: bold;
@@ -278,24 +281,24 @@ input:checked + .slider:before { transform: translateX(26px); }
 /* عند مرور الماوس */
 .word-btn:hover { 
     background: #333; 
-    border-color: #00e676; 
+    border-color: #0085d0; 
     transform: translateY(-5px); 
 }
 
 /* عند تفعيل الزر */
 .word-btn.active { 
-    background: #00e676; 
+    background: #0085d0; 
     color: #000; 
     font-weight: bold; 
-    border-color: #00e676;
+    border-color: #0085d0;
     transform: scale(1.05);
-    box-shadow: 0 0 20px rgba(0, 230, 118, 0.5); 
+    box-shadow: 0 0 20px rgba(0, 133, 208, 0.5); 
 }
 
 /* الصندوق الذي يظهر الكلمة/الحرف المطلوب */
 .target-box {
     background: #222;
-    border: 2px dashed #00e676;
+    border: 2px dashed #0085d0;
     padding: 20px;
     border-radius: 15px;
     margin: 20px auto;
@@ -333,14 +336,14 @@ input:checked + .slider:before { transform: translateX(26px); }
 
 .result-icon { font-size: 4rem; margin-bottom: 10px; display: block; }
 .result-text { font-size: 1.5rem; color: #fff; margin-bottom: 20px; }
-.correct { color: #00e676; border-color: #00e676; }
+.correct { color: #0085d0; border-color: #0085d0; }
 .wrong { color: #ff3d00; border-color: #ff3d00; }
 
 /* تنسيق القائمة المنسدلة */
 .custom-select {
     background-color: #1e1e1e;
     color: #fff;
-    border: 1px solid #00e676;
+    border: 1px solid #0085d0;
     padding: 8px 10px;
     border-radius: 8px;
     font-size: 1rem;
@@ -352,4 +355,60 @@ input:checked + .slider:before { transform: translateX(26px); }
 
 .custom-select:hover {
     background-color: #2c2c2c;
+}
+
+.ksu-logo {
+    position: absolute; /* تثبيت حر */
+    top: 20px;          /* المسافة من الأعلى */
+    right: 30px;        /* المسافة من اليمين */
+    width: 160px;       /* حجم الشعار (عدله حسب رغبتك) */
+    height: auto;       /* الحفاظ على الأبعاد */
+    z-index: 2000;      /* ضمان ظهوره فوق كل العناصر */
+    
+    /* تحسينات جمالية */
+    filter: drop-shadow(0 0 5px rgba(0, 133, 208, 0.5)); /* ظل أزرق خفيف حول الشعار */
+    opacity: 0.9;
+    transition: all 0.3s ease;
+}
+
+.ksu-logo:hover {
+    opacity: 1;
+    transform: scale(1.05); /* تكبير بسيط عند المرور */
+}
+
+/* تحسين للجوال: تصغير الشعار قليلاً في الشاشات الصغيرة */
+@media (max-width: 768px) {
+    .ksu-logo {
+        width: 70px;
+        top: 15px;
+        right: 15px;
+    }
+}
+
+/* عرض الشريط */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+/* مسار الشريط (الخلفية) */
+::-webkit-scrollbar-track {
+    background: #121212; /* نفس لون خلفية الموقع */
+}
+
+/* المقبض (الجزء المتحرك) */
+::-webkit-scrollbar-thumb {
+    background: #333;    /* لون رمادي هادئ */
+    border-radius: 5px;  /* حواف دائرية */
+    border: 2px solid #121212; /* حدود لعمل مسافة جمالية */
+}
+
+/* عند مرور الماوس على المقبض */
+::-webkit-scrollbar-thumb:hover {
+    background: #0085d0; /* يتحول للأزرق (لون الجامعة) */
+}
+
+/* دعم متصفح Firefox */
+html {
+    scrollbar-width: thin;
+    scrollbar-color: #333 #121212;
 }

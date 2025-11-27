@@ -6,7 +6,8 @@
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-
+    
+    <img src="/static/logo.png" class="ksu-logo" alt="KSU Logo">
     <div class="nav-header">
         <button class="back-btn" onclick="window.location.href='/'">
             <span>🏠</span> Home
@@ -49,14 +50,13 @@
                 <div class="result-text" id="resText">Wait...</div>
                 <button class="word-btn" onclick="closeResult()" style="background: #333; border-color: #777;">Close</button>
             </div>
-            
+            <div id="overlayTimer" style="position: absolute; left: 50%; font-size:5rem; color:#0085d0; font-weight:bold; display:none;">3</div>
             <video id="video" autoplay playsinline muted></video>
             <canvas id="canvas" width="1280" height="720" style="display:none;"></canvas>
-            <div id="overlayTimer" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:5rem; color:#00e676; font-weight:bold; display:none;">3</div>
         </div>
 
         <div style="margin-top: 20px;">
-            <button id="actionBtn" class="word-btn" style="width: 300px; height: 70px; font-size: 1.5em; background: #2196f3; color: #000;">
+            <button id="actionBtn" class="word-btn" style="width: 300px; height: 70px; font-size: 1.5em; background: #0085d0; color: #000;">
                 Take Picture 📸
             </button>
         </div>
@@ -83,6 +83,7 @@
         const resultOverlay = document.getElementById('resultOverlay');
         const manualSelect = document.getElementById('manualSelect');
         const manualBtn = document.getElementById('manualBtn');
+        
 
         const lettersList = [
             "أ", "ب", "ت", "ث", "ج", "ح", "خ", "د", "ذ", "ر", "ز", "س", "ش", 
@@ -110,10 +111,10 @@
             currentMode = modeToggle.checked ? 'word' : 'letter';
             if(currentMode === 'word') {
                 actionBtn.innerText = "Start Performing 🎥";
-                actionBtn.style.background = "#00e676";
+                actionBtn.style.background = "#0085d0";
             } else {
                 actionBtn.innerText = "Take Picture 📸";
-                actionBtn.style.background = "#2196f3";
+                actionBtn.style.background = "#0085d0";
             }
             generateRandomChallenge();
             updateDropdownList();
@@ -229,10 +230,10 @@
             manualBtn.disabled = false;   
             if (currentMode === 'word') {
                 actionBtn.innerText = "Start Performing 🎥";
-                actionBtn.style.background = "#00e676";
+                actionBtn.style.background = "#0085d0";
             } else {
                 actionBtn.innerText = "Take Picture 📸";
-                actionBtn.style.background = "#2196f3";
+                actionBtn.style.background = "#0085d0";
             }
 
             // إظهار النتيجة
