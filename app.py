@@ -57,7 +57,7 @@ class Config:
     
     # عدد الإطارات المطلوبة
     WORD_SEQUENCE_LENGTH = 30
-    LETTER_REQUIRED_OCCURRENCES = 10
+    LETTER_REQUIRED_OCCURRENCES = 5
     
     # مسارات الملفات
     WORD_MODEL_PATH = r".\utils\DL_model\checkpoints\best_model.keras"
