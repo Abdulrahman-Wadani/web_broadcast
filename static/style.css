@@ -372,8 +372,9 @@ input:checked + .slider:before {
 }
 
 .words-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    display: flex;             
+    flex-wrap: wrap;           
+    justify-content: center;   
     gap: 20px;
     width: 90%;
     max-width: 1000px;
@@ -381,13 +382,21 @@ input:checked + .slider:before {
     margin-bottom: 50px;
 }
 
+
+.words-grid > div {
+    flex: 1 1 180px;           
+    max-width: 1fr;            
+}
 .word-btn {
     background: linear-gradient(145deg, #1e1e1e, #252525);
     color: #fff;
     border: 2px solid #444;
-    padding: 18px 12px;
+    padding-left: 6px;
+    padding-right: 6px;
+    padding-bottom: 6px;
+    padding-top: 6px;
     border-radius: 15px;
-    font-size: 1.4em;
+    font-size: 12;
     cursor: pointer;
     transition: all 0.3s ease;
     text-align: center;
@@ -503,7 +512,7 @@ input:checked + .slider:before {
     background: transparent;
 }
 
-.ksu-logo {
+.logo {
     position: absolute;
     top: 20px;
     right: 30px;
@@ -515,7 +524,7 @@ input:checked + .slider:before {
     transition: all 0.3s ease;
 }
 
-.ksu-logo:hover {
+.logo:hover {
     opacity: 1;
     transform: scale(1.05);
     filter: drop-shadow(0 0 15px rgba(0, 133, 208, 0.7));
@@ -585,7 +594,7 @@ html {
         padding: 0 15px;
     }
     
-    .ksu-logo {
+    .logo {
         width: 80px;
         top: 15px;
         right: 15px;
