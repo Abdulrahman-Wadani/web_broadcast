@@ -1,35 +1,59 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>Training Mode</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مركز التعلم - نظام لغة الإشارة</title>
     <link rel="stylesheet" href="/static/style.css"> 
 </head>
 <body>
-    <img src="/static/logo.png" class="ksu-logo" alt="KSU Logo">
-<div class="nav-header">
-    <button class="back-btn" onclick="window.location.href='/'">
-        <span>🏠</span> الرئيسية
-    </button>
+    <img src="/static/logo.png" class="ksu-logo" alt="شعار جامعة الملك سعود">
+    
+    <div class="nav-header">
+        <button class="back-btn" onclick="window.location.href='/'">
+            <span>🏠</span> الرئيسية
+        </button>
     </div>
     
     <div class="container">
-        <h1 style="margin-top: -80px;">مركز التعلم</h1>
-        <p style="color: #888;">اختر اسلوب التعلم</p>
+        <h1 style="margin-top: -60px;">مركز التعلم</h1>
+        <p style="color: #888; font-size: 1.2em; margin-bottom: 10px;">
+            ابدأ رحلتك في تعلم لغة الإشارة العربية
+        </p>
+        <p style="color: #666; font-size: 0.95em; margin-bottom: 40px;">
+            اختر بين تعلم الحروف الأساسية أو الكلمات الشائعة
+        </p>
 
         <div class="menu-grid">
             <a href="/train/letters" class="card-btn">
-                <h3>احرف</h3>
-                <p>تعلم تنفيذ الاحرف</p>
-                <span style="font-size: 2em;">🔤</span>
+                <span style="font-size: 3.5em; margin-bottom: 15px;">🔤</span>
+                <h3>الحروف</h3>
+                <p>تعلم جميع حروف لغة الإشارة العربية</p>
+                <small style="color: #555; margin-top: 5px;">28 حرفاً</small>
             </a>
 
             <a href="/train/words" class="card-btn">
-                <h3>كلمات</h3>
-                <p>تعلم المصطلحات</p>
-                <span style="font-size: 2em;">💬</span>
+                <span style="font-size: 3.5em; margin-bottom: 15px;">💬</span>
+                <h3>الكلمات</h3>
+                <p>تعلم الكلمات والمصطلحات الشائعة</p>
+                <small style="color: #555; margin-top: 5px;">10 كلمات</small>
             </a>
         </div>
+
+        <div style="margin-top: 60px; padding: 25px; background: #1e1e1e; border-radius: 15px; border-right: 5px solid #0085d0;">
+            <h3 style="color: #0085d0; margin-bottom: 15px; text-align: right;">💡 نصائح التعلم:</h3>
+            <ul style="color: #aaa; text-align: right; line-height: 2; list-style: none; padding: 0;">
+                <li style="margin-bottom: 10px;">✓ ابدأ بالحروف لبناء الأساسيات</li>
+                <li style="margin-bottom: 10px;">✓ تدرب يومياً لمدة 10-15 دقيقة</li>
+                <li style="margin-bottom: 10px;">✓ راجع الإشارات بشكل متكرر</li>
+                <li style="margin-bottom: 10px;">✓ انتقل للكلمات بعد إتقان الحروف</li>
+                <li>✓ استخدم المرآة أثناء التدريب</li>
+            </ul>
+        </div>
     </div>
+
+    <footer style="margin-top: 50px; padding: 20px; text-align: center; color: #666;">
+        <p>استمتع بالتعلم وكن صبوراً - الممارسة تصنع الإتقان! 🎯</p>
+    </footer>
 </body>
 </html>

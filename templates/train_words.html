@@ -1,62 +1,188 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>Words Training</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تعلم الكلمات - نظام لغة الإشارة</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <img src="/static/logo.png" class="ksu-logo" alt="KSU Logo">
+    <img src="/static/logo.png" class="ksu-logo" alt="شعار جامعة الملك سعود">
+    
     <div class="nav-header">
-    <button class="back-btn" onclick="window.location.href='/'">
-        <span>🏠</span> الرئيسية
-    </button>
+        <button class="back-btn" onclick="window.location.href='/'">
+            <span>🏠</span> الرئيسية
+        </button>
 
-    <button class="back-btn" onclick="window.location.href='/train'">
-        <span>⬅️</span> مركز التعلم
-    </button>
-</div>
+        <button class="back-btn" onclick="window.location.href='/train'">
+            <span>⬅️</span> مركز التعلم
+        </button>
+    </div>
 
     <div class="container words-mode">
-        <h1 style="margin-top: -80px;">المصطلحات العربية</h1>
+        <h1 style="margin-top: -60px;">تعلم الكلمات الشائعة</h1>
+        <p style="color: #888; margin-bottom: 10px;">
+            اضغط على أي كلمة لمشاهدة فيديو توضيحي لأداء الإشارة
+        </p>
+        <p style="color: #666; font-size: 0.9em; margin-bottom: 30px;">
+            الكلمة المختارة: <span style="color: #0085d0; font-weight: bold; font-size: 1.2em;" id="selectedWord">اختر كلمة</span>
+        </p>
         
+        <!-- مشغل الفيديو -->
         <div class="video-container">
             <video id="wordVideo" class="training-video" playsinline muted>
                 <source src="" type="video/mp4">
-                لا يدعم متصفحك الفديو
+                متصفحك لا يدعم عرض الفيديو
             </video>
+            <div id="videoOverlay" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; flex-direction: column; pointer-events: none;">
+                <div style="font-size: 4em; margin-bottom: 15px;">🎬</div>
+                <div style="color: #fff; font-size: 1.3em;">اختر كلمة لمشاهدة الفيديو</div>
+            </div>
         </div>
 
+        <!-- شبكة الكلمات -->
         <div class="words-grid">
-            <button class="word-btn" onclick="playWord('أنا', this)">أنا</button>
-            <button class="word-btn" onclick="playWord('هذا', this)">هذا</button>
-            <button class="word-btn" onclick="playWord('اريد', this)">اريد</button>
-            <button class="word-btn" onclick="playWord('شيء', this)">شيء</button>
-            <button class="word-btn" onclick="playWord('هنا', this)">هنا</button>
-            <button class="word-btn" onclick="playWord('الان', this)">الان</button>
-            <button class="word-btn" onclick="playWord('لا', this)">لا</button>
-            <button class="word-btn" onclick="playWord('في', this)">في</button>
-            <button class="word-btn" onclick="playWord('ماذا', this)">ماذا</button>
-            <button class="word-btn" onclick="playWord('اخرس', this)">اخرس</button>
+            <button class="word-btn" onclick="playWord('أنا', this)" title="أداء كلمة: أنا">
+                <div style="font-size: 1.5em; margin-bottom: 5px;">أنا</div>
+                <small style="color: #888;">I / Me</small>
+            </button>
+            <button class="word-btn" onclick="playWord('هذا', this)" title="أداء كلمة: هذا">
+                <div style="font-size: 1.5em; margin-bottom: 5px;">هذا</div>
+                <small style="color: #888;">This</small>
+            </button>
+            <button class="word-btn" onclick="playWord('اريد', this)" title="أداء كلمة: اريد">
+                <div style="font-size: 1.5em; margin-bottom: 5px;">اريد</div>
+                <small style="color: #888;">I want</small>
+            </button>
+            <button class="word-btn" onclick="playWord('شيء', this)" title="أداء كلمة: شيء">
+                <div style="font-size: 1.5em; margin-bottom: 5px;">شيء</div>
+                <small style="color: #888;">Thing</small>
+            </button>
+            <button class="word-btn" onclick="playWord('هنا', this)" title="أداء كلمة: هنا">
+                <div style="font-size: 1.5em; margin-bottom: 5px;">هنا</div>
+                <small style="color: #888;">Here</small>
+            </button>
+            <button class="word-btn" onclick="playWord('الان', this)" title="أداء كلمة: الان">
+                <div style="font-size: 1.5em; margin-bottom: 5px;">الآن</div>
+                <small style="color: #888;">Now</small>
+            </button>
+            <button class="word-btn" onclick="playWord('لا', this)" title="أداء كلمة: لا">
+                <div style="font-size: 1.5em; margin-bottom: 5px;">لا</div>
+                <small style="color: #888;">No</small>
+            </button>
+            <button class="word-btn" onclick="playWord('في', this)" title="أداء كلمة: في">
+                <div style="font-size: 1.5em; margin-bottom: 5px;">في</div>
+                <small style="color: #888;">In</small>
+            </button>
+            <button class="word-btn" onclick="playWord('ماذا', this)" title="أداء كلمة: ماذا">
+                <div style="font-size: 1.5em; margin-bottom: 5px;">ماذا</div>
+                <small style="color: #888;">What</small>
+            </button>
+            <button class="word-btn" onclick="playWord('اخرس', this)" title="أداء كلمة: اخرس">
+                <div style="font-size: 1.5em; margin-bottom: 5px;">اسكت</div>
+                <small style="color: #888;">Be quiet</small>
+            </button>
+        </div>
+
+        <!-- نصائح للتعلم -->
+        <div style="margin-top: 40px; margin-bottom: 50px; padding: 20px; background: #1e1e1e; border-radius: 15px; border-right: 5px solid #0085d0;">
+            <h4 style="color: #0085d0; margin-bottom: 10px; text-align: right;">📹 إرشادات المشاهدة:</h4>
+            <ul style="color: #aaa; text-align: right; line-height: 2;">
+                <li>شاهد الفيديو بتركيز عدة مرات</li>
+                <li>لاحظ حركة اليدين والتسلسل الزمني</li>
+                <li>لاحظ الموضع لكل حركة بالنسبة لبقية اعضاء الجسد  -ما هو ارتفاع اليد مقارنة بالرأس-</li>
+                <li>حاول تقليد الإشارة أمام المرآة</li>
+                <li>تدرب على كل كلمة حتى تصبح سلسة وطبيعية</li>
+            </ul>
+            
+            <div style="margin-top: 20px; padding: 15px; background: #2a2a2a; border-radius: 10px; border-right: 3px solid #0085d0;">
+                <p style="color: #0085d0; font-weight: bold; margin-bottom: 5px;">💡 نصيحة:</p>
+                <p style="color: #aaa; font-size: 0.95em; line-height: 1.6;">
+                    بعد إتقان الكلمات، جرّب نفسك في صفحة "اختبر نفسك" للتأكد من مستواك!
+                </p>
+            </div>
         </div>
     </div>
 
     <script>
+        const videoPlayer = document.getElementById('wordVideo');
+        const videoOverlay = document.getElementById('videoOverlay');
+        const selectedWordDisplay = document.getElementById('selectedWord');
+        
         function playWord(wordName, btnElement) {
-            const videoPlayer = document.getElementById('wordVideo');
-
+            // تحديث اسم الكلمة المختارة
+            selectedWordDisplay.innerText = wordName;
+            
+            // تغيير مصدر الفيديو
             videoPlayer.src = `/static/words_videos/${wordName}.mp4`;
 
+            // إظهار حاوية الفيديو
             const videoContainer = document.querySelector('.video-container');
             videoContainer.style.display = 'block';
 
-            videoPlayer.play();
+            // إخفاء الـ overlay
+            videoOverlay.style.display = 'none';
 
+            // تشغيل الفيديو
+            videoPlayer.play().catch(err => {
+                console.error('خطأ في تشغيل الفيديو:', err);
+            });
+
+            // معالجة خطأ تحميل الفيديو
+            videoPlayer.onerror = function() {
+                alert('❌ عذراً، الفيديو غير متوفر حالياً.');
+                videoOverlay.style.display = 'flex';
+            };
+
+            // تحديث الأزرار النشطة
             document.querySelectorAll('.word-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
             btnElement.classList.add('active');
+
+            // التمرير إلى الفيديو
+            videoContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
+
+        // عند انتهاء الفيديو، يمكن إعادة التشغيل
+        videoPlayer.addEventListener('ended', function() {
+            // يمكنك إضافة سلوك معين هنا
+            // مثلاً: videoPlayer.play() لإعادة التشغيل تلقائياً
+        });
+
+        // إضافة مؤشر تقدم الفيديو
+        videoPlayer.addEventListener('loadstart', function() {
+            console.log('جاري تحميل الفيديو...');
+        });
+
+        videoPlayer.addEventListener('loadeddata', function() {
+            console.log('تم تحميل الفيديو بنجاح');
+        });
+
+        // دعم لوحة المفاتيح للتنقل بين الكلمات (اختياري)
+        document.addEventListener('keydown', (e) => {
+            const buttons = document.querySelectorAll('.word-btn');
+            const activeBtn = document.querySelector('.word-btn.active');
+            
+            if (!activeBtn) return;
+            
+            const currentIndex = Array.from(buttons).indexOf(activeBtn);
+            
+            if (e.key === 'ArrowRight' && currentIndex > 0) {
+                e.preventDefault();
+                buttons[currentIndex - 1].click();
+            } else if (e.key === 'ArrowLeft' && currentIndex < buttons.length - 1) {
+                e.preventDefault();
+                buttons[currentIndex + 1].click();
+            } else if (e.key === ' ') {
+                e.preventDefault();
+                if (videoPlayer.paused) {
+                    videoPlayer.play();
+                } else {
+                    videoPlayer.pause();
+                }
+            }
+        });
     </script>
 </body>
 </html>

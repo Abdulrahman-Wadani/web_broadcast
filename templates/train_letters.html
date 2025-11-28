@@ -1,90 +1,160 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl"> <head>
+<html lang="ar" dir="rtl">
+<head>
     <meta charset="UTF-8">
-    <title>تدريب الحروف</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تعلم الحروف - نظام لغة الإشارة</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <img src="/static/logo.png" class="ksu-logo" alt="KSU Logo">
+    <img src="/static/logo.png" class="ksu-logo" alt="شعار جامعة الملك سعود">
+    
     <div class="nav-header">
-    <button class="back-btn" onclick="window.location.href='/'">
-        <span>🏠</span> الرئيسية
-    </button>
+        <button class="back-btn" onclick="window.location.href='/'">
+            <span>🏠</span> الرئيسية
+        </button>
 
-    <button class="back-btn" onclick="window.location.href='/train'">
-        <span>⬅️</span> مركز التعلم
-    </button>
-</div>
+        <button class="back-btn" onclick="window.location.href='/train'">
+            <span>⬅️</span> مركز التعلم
+        </button>
+    </div>
 
     <div class="container">
-        <h1 style="margin-top: -80px;">الاحرف العربية</h1>
-        <p style="color: #aaa;">اضغط على الحرف لرؤية حركته</p>
+        <h1 style="margin-top: -60px;">تعلم الحروف العربية</h1>
+        <p style="color: #888; margin-bottom: 10px;">
+            اضغط على أي حرف لرؤية إشارة اليد الخاصة به
+        </p>
+        <p style="color: #666; font-size: 0.9em; margin-bottom: 30px;">
+            <span style="color: #0085d0; font-weight: bold;" id="selectedLetter">أ</span> - الحرف المختار
+        </p>
 
         <div class="training-container">
             
+            <!-- صندوق عرض الصورة -->
             <div class="image-display-area">
-                <img id="signImage" src="/static/letters/أ.png" alt="اختر حرفاً">
+                <img id="signImage" src="/static/letters/أ.png" alt="إشارة الحرف">
+                <div id="loadingOverlay" style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #0085d0; font-size: 2em;">
+                    ⏳
+                </div>
             </div>
 
+            <!-- شبكة الحروف -->
             <div class="letters-grid">
-                <button class="letter-btn" onclick="showLetter('أ', this)">أ</button>
-                <button class="letter-btn" onclick="showLetter('ب', this)">ب</button>
-                <button class="letter-btn" onclick="showLetter('ت', this)">ت</button>
-                <button class="letter-btn" onclick="showLetter('ث', this)">ث</button>
-                <button class="letter-btn" onclick="showLetter('ج', this)">ج</button>
-                <button class="letter-btn" onclick="showLetter('ح', this)">ح</button>
-                <button class="letter-btn" onclick="showLetter('خ', this)">خ</button>
-                <button class="letter-btn" onclick="showLetter('د', this)">د</button>
-                <button class="letter-btn" onclick="showLetter('ذ', this)">ذ</button>
-                <button class="letter-btn" onclick="showLetter('ر', this)">ر</button>
-                <button class="letter-btn" onclick="showLetter('ز', this)">ز</button>
-                <button class="letter-btn" onclick="showLetter('س', this)">س</button>
-                <button class="letter-btn" onclick="showLetter('ش', this)">ش</button>
-                <button class="letter-btn" onclick="showLetter('ص', this)">ص</button>
-                <button class="letter-btn" onclick="showLetter('ض', this)">ض</button>
-                <button class="letter-btn" onclick="showLetter('ط', this)">ط</button>
-                <button class="letter-btn" onclick="showLetter('ظ', this)">ظ</button>
-                <button class="letter-btn" onclick="showLetter('ع', this)">ع</button>
-                <button class="letter-btn" onclick="showLetter('غ', this)">غ</button>
-                <button class="letter-btn" onclick="showLetter('ف', this)">ف</button>
-                <button class="letter-btn" onclick="showLetter('ق', this)">ق</button>
-                <button class="letter-btn" onclick="showLetter('ك', this)">ك</button>
-                <button class="letter-btn" onclick="showLetter('ل', this)">ل</button>
-                <button class="letter-btn" onclick="showLetter('م', this)">م</button>
-                <button class="letter-btn" onclick="showLetter('ن', this)">ن</button>
-                <button class="letter-btn" onclick="showLetter('ه', this)">هـ</button> 
-                <button class="letter-btn" onclick="showLetter('و', this)">و</button>
-                <button class="letter-btn" onclick="showLetter('ي', this)">ي</button>
+                <button class="letter-btn" onclick="showLetter('أ', this)" title="حرف الألف">أ</button>
+                <button class="letter-btn" onclick="showLetter('ب', this)" title="حرف الباء">ب</button>
+                <button class="letter-btn" onclick="showLetter('ت', this)" title="حرف التاء">ت</button>
+                <button class="letter-btn" onclick="showLetter('ث', this)" title="حرف الثاء">ث</button>
+                <button class="letter-btn" onclick="showLetter('ج', this)" title="حرف الجيم">ج</button>
+                <button class="letter-btn" onclick="showLetter('ح', this)" title="حرف الحاء">ح</button>
+                <button class="letter-btn" onclick="showLetter('خ', this)" title="حرف الخاء">خ</button>
+                <button class="letter-btn" onclick="showLetter('د', this)" title="حرف الدال">د</button>
+                <button class="letter-btn" onclick="showLetter('ذ', this)" title="حرف الذال">ذ</button>
+                <button class="letter-btn" onclick="showLetter('ر', this)" title="حرف الراء">ر</button>
+                <button class="letter-btn" onclick="showLetter('ز', this)" title="حرف الزاي">ز</button>
+                <button class="letter-btn" onclick="showLetter('س', this)" title="حرف السين">س</button>
+                <button class="letter-btn" onclick="showLetter('ش', this)" title="حرف الشين">ش</button>
+                <button class="letter-btn" onclick="showLetter('ص', this)" title="حرف الصاد">ص</button>
+                <button class="letter-btn" onclick="showLetter('ض', this)" title="حرف الضاد">ض</button>
+                <button class="letter-btn" onclick="showLetter('ط', this)" title="حرف الطاء">ط</button>
+                <button class="letter-btn" onclick="showLetter('ظ', this)" title="حرف الظاء">ظ</button>
+                <button class="letter-btn" onclick="showLetter('ع', this)" title="حرف العين">ع</button>
+                <button class="letter-btn" onclick="showLetter('غ', this)" title="حرف الغين">غ</button>
+                <button class="letter-btn" onclick="showLetter('ف', this)" title="حرف الفاء">ف</button>
+                <button class="letter-btn" onclick="showLetter('ق', this)" title="حرف القاف">ق</button>
+                <button class="letter-btn" onclick="showLetter('ك', this)" title="حرف الكاف">ك</button>
+                <button class="letter-btn" onclick="showLetter('ل', this)" title="حرف اللام">ل</button>
+                <button class="letter-btn" onclick="showLetter('م', this)" title="حرف الميم">م</button>
+                <button class="letter-btn" onclick="showLetter('ن', this)" title="حرف النون">ن</button>
+                <button class="letter-btn" onclick="showLetter('ه', this)" title="حرف الهاء">هـ</button> 
+                <button class="letter-btn" onclick="showLetter('و', this)" title="حرف الواو">و</button>
+                <button class="letter-btn" onclick="showLetter('ي', this)" title="حرف الياء">ي</button>
+            </div>
+        </div>
+
+        <!-- نصائح للتعلم -->
+        <div style="margin-top: 40px; padding: 20px; background: #1e1e1e; border-radius: 15px; border-right: 5px solid #0085d0;">
+            <h4 style="color: #0085d0; margin-bottom: 10px; text-align: right;">📝 كيفية التعلم الفعال:</h4>
+            <ul style="color: #aaa; text-align: right; line-height: 2;">
+                <li>اضغط على كل حرف لرؤية إشارته</li>
+                <li>لاحظ وضعية اليد بعناية</li>
+                <li>حاول تقليد الإشارة أمام المرآة</li>
+                <li>كرر كل حرف عدة مرات حتى تتقنه</li>
+                <li>راجع الحروف يومياً لتثبيت المعلومات</li>
+            </ul>
+            <div style="margin-top: 20px; padding: 15px; background: #2a2a2a; border-radius: 10px; border-right: 3px solid #0085d0;">
+                <p style="color: #0085d0; font-weight: bold; margin-bottom: 5px;">💡 نصيحة:</p>
+                <p style="color: #aaa; font-size: 0.95em; line-height: 1.6;">
+                    بعد إتقان الكلمات، جرّب نفسك في صفحة "اختبر نفسك" للتأكد من مستواك!
+                </p>
             </div>
         </div>
     </div>
 
     <script>
+        // خريطة أسماء الحروف الكاملة
+        const letterNames = {
+            'أ': 'الألف', 'ب': 'الباء', 'ت': 'التاء', 'ث': 'الثاء',
+            'ج': 'الجيم', 'ح': 'الحاء', 'خ': 'الخاء', 'د': 'الدال',
+            'ذ': 'الذال', 'ر': 'الراء', 'ز': 'الزاي', 'س': 'السين',
+            'ش': 'الشين', 'ص': 'الصاد', 'ض': 'الضاد', 'ط': 'الطاء',
+            'ظ': 'الظاء', 'ع': 'العين', 'غ': 'الغين', 'ف': 'الفاء',
+            'ق': 'القاف', 'ك': 'الكاف', 'ل': 'اللام', 'م': 'الميم',
+            'ن': 'النون', 'ه': 'الهاء', 'و': 'الواو', 'ي': 'الياء'
+        };
+
         function showLetter(letter, btnElement) {
-            // 1. تغيير مصدر الصورة
             const imgElement = document.getElementById('signImage');
+            const selectedLetterDisplay = document.getElementById('selectedLetter');
+            const loadingOverlay = document.getElementById('loadingOverlay');
             
-            // ملاحظة: إذا كان اسم ملف الميم "م.png" عدل الزر في الأعلى ليكون 'م' بدلاً من 'm'
-            // قمت بوضع المسار بناءً على أن الصور داخل static/letters
+            // إظهار مؤشر التحميل
+            loadingOverlay.style.display = 'block';
+            
+            // تحديث النص المختار
+            selectedLetterDisplay.innerText = `${letter} (${letterNames[letter]})`;
+            
+            // تغيير مصدر الصورة
+            imgElement.style.opacity = '0.5';
             imgElement.src = `/static/letters/${letter}.png`;
             
-            // التعامل مع خطأ عدم وجود الصورة
+            // معالجة التحميل الناجح
+            imgElement.onload = function() {
+                imgElement.style.opacity = '1';
+                loadingOverlay.style.display = 'none';
+            };
+            
+            // معالجة خطأ عدم وجود الصورة
             imgElement.onerror = function() {
-                this.src = ''; // إخفاء الصورة المكسورة أو وضع صورة بديلة
+                this.style.opacity = '1';
+                this.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%230085d0" font-size="60"%3E${letter}%3C/text%3E%3C/svg%3E';
                 this.alt = "الصورة غير متوفرة";
+                loadingOverlay.style.display = 'none';
             };
 
-            // 2. تلوين الزر النشط (Active)
-            // إزالة الكلاس active من كل الأزرار
+            // تحديث الأزرار النشطة
             document.querySelectorAll('.letter-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
-            // إضافة الكلاس active للزر الذي تم ضغطه
             btnElement.classList.add('active');
         }
 
-        // تفعيل الحرف الأول تلقائياً عند التحميل
-        document.querySelector('.letter-btn').click();
+        // تفعيل الحرف الأول تلقائياً عند تحميل الصفحة
+        window.addEventListener('DOMContentLoaded', () => {
+            document.querySelector('.letter-btn').click();
+        });
+
+        // إضافة دعم لوحة المفاتيح (اختياري)
+        document.addEventListener('keydown', (e) => {
+            const buttons = document.querySelectorAll('.letter-btn');
+            const activeBtn = document.querySelector('.letter-btn.active');
+            const currentIndex = Array.from(buttons).indexOf(activeBtn);
+            
+            if (e.key === 'ArrowRight' && currentIndex > 0) {
+                buttons[currentIndex - 1].click();
+            } else if (e.key === 'ArrowLeft' && currentIndex < buttons.length - 1) {
+                buttons[currentIndex + 1].click();
+            }
+        });
     </script>
 </body>
 </html>

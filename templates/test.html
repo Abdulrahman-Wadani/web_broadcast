@@ -201,23 +201,21 @@
         }
 
         function startWordProcess() {
-            let frames = [];
-            let frameCount = 0;
+            let frameCount = 0
             actionBtn.innerText = "⏺ جارٍ التسجيل...";
             actionBtn.style.background = "#ff3d00";
 
             const interval = setInterval(() => {
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                 const b64 = canvas.toDataURL('image/jpeg', 0.5).split(',')[1];
-                frames.push(b64);
                 frameCount++;
 
                 if (frameCount >= 30) {
                     clearInterval(interval);
                     actionBtn.innerText = "⏳ جارٍ التحليل...";
-                    
-                    socket.emit('Test_Word_Batch', { frames: frames, target: currentTarget });
                 }
+                socket.emit('Test_Word', { b64: b64, target: currentTarget });
+
             }, 1000 / 10);
         }
 

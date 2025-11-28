@@ -446,53 +446,54 @@ def handle_test_letter(data):
     except Exception as e:
         socketio.emit('test_response', f"خطأ: {str(e)}")
 
-@socketio.on('Test_Word_Batch')
+@socketio.on('Test_Word')
 def handle_test_word(data):
-    """اختبار الكلمات"""
-    frames_b64 = data.get("frames")
+    predicted_word = ""
+    b64 = data.get("b64")
     target_word = data.get("target")
     
-    if not frames_b64:
-        socketio.emit('test_response', "خطأ: لا توجد إطارات")
+    if not b64:
+        socketio.emit('result', "خطأ: لا توجد بيانات")
         return
     
     try:
-        # فك تشفير جميع الإطارات
-        frames = []
-        for b64 in frames_b64:
-            frame = ImageProcessor.decode_base64_image(b64)
-            frames.append(frame)
+        # فك تشفير الصورة
+        frame = ImageProcessor.decode_base64_image(b64)
         
-        # معالجة الإطارات
-        sequence = []
-        for frame in frames:
-            with models.mp_holistic.Holistic(
-                min_detection_confidence=0.5,
-                min_tracking_confidence=0.5
-            ) as holistic:
-                results = ImageProcessor.mediapipe_detection(frame, holistic)
-                keypoints = ImageProcessor.extract_keypoints(results)
-                sequence.append(keypoints)
-                sequence = sequence[-Config.WORD_SEQUENCE_LENGTH:]
+        # كشف النقاط المفتاحية
+        with models.mp_holistic.Holistic(
+            min_detection_confidence=0.5,
+            min_tracking_confidence=0.5
+        ) as holistic:
+            results = ImageProcessor.mediapipe_detection(frame, holistic)
+            keypoints = ImageProcessor.extract_keypoints(results)
+            
+            # إضافة للتسلسل
+            state.word_sequence.append(keypoints)
+            state.word_sequence = state.word_sequence[-Config.WORD_SEQUENCE_LENGTH:]
+            
+            # التنبؤ عند اكتمال التسلسل
+            if len(state.word_sequence) == Config.WORD_SEQUENCE_LENGTH:
+                prediction = models.word_model.predict(
+                    np.expand_dims(state.word_sequence, axis=0),
+                    verbose=0
+                )[0]
                 
-                if len(sequence) == Config.WORD_SEQUENCE_LENGTH:
-                    prediction = models.word_model.predict(
-                        np.expand_dims(sequence, axis=0),
-                        verbose=0
-                    )[0]
-                    
-                    predicted_idx = np.argmax(prediction)
-                    confidence = prediction[predicted_idx]
-                    predicted_word = Config.WORDS[predicted_idx]
-                    
-                    sequence = []
-        
+                predicted_idx = np.argmax(prediction)
+                confidence = prediction[predicted_idx]
+                predicted_word = Config.WORDS[predicted_idx]
+                print(predicted_word)
+                
+                # إعادة تعيين التسلسل
+                state.word_sequence = []
+    
         if predicted_word == target_word:
             result = f"✅ صحيح! الدقة: {confidence:.0%}"
-        else:
+            socketio.emit('test_response', result)
+        elif predicted_word!="":
             result = f"❌ خطأ! أنت أديت: {predicted_word}"
+            socketio.emit('test_response', result)
         
-        socketio.emit('test_response', result)
     
     except Exception as e:
         socketio.emit('test_response', f"خطأ: {str(e)}")
