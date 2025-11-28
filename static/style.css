@@ -463,9 +463,10 @@ input:checked + .slider:before {
     line-height: 1.6;
 }
 
+/* ----- تعديل القائمة المنسدلة ----- */
 .custom-select {
-    background: linear-gradient(145deg, #1e1e1e, #252525);
-    color: #fff;
+    color: #fff; 
+    background-color: #1F1F1F; /* Changed to #1F1F1F from image */
     border: 2px solid #0085d0;
     padding: 10px 15px;
     border-radius: 12px;
@@ -478,8 +479,13 @@ input:checked + .slider:before {
     transition: all 0.3s ease;
 }
 
+/* Ensure options inside the dropdown are also dark */
+.custom-select option {
+    background-color: #1F1F1F;
+    color: #fff;
+}
+
 .custom-select:hover {
-    background: linear-gradient(145deg, #252525, #2c2c2c);
     border-color: #00a0ff;
 }
 
@@ -516,8 +522,10 @@ input:checked + .slider:before {
 }
 
 /* ============================================================================
-   شريط التمرير
+   شريط التمرير (Scrollbar)
    ============================================================================ */
+   
+/* Global Scrollbar */
 ::-webkit-scrollbar {
     width: 12px;
 }
@@ -534,6 +542,29 @@ input:checked + .slider:before {
 
 ::-webkit-scrollbar-thumb:hover {
     background: linear-gradient(180deg, #0085d0, #0066a0);
+}
+
+/* ----- New Scrollbar style specifically for the Dropdown ----- */
+select::-webkit-scrollbar, 
+.custom-select::-webkit-scrollbar {
+    width: 10px;
+}
+
+select::-webkit-scrollbar-track,
+.custom-select::-webkit-scrollbar-track {
+    background: #1F1F1F; /* Dark background for the track */
+}
+
+select::-webkit-scrollbar-thumb,
+.custom-select::-webkit-scrollbar-thumb {
+    background: #555; /* Lighter thumb */
+    border-radius: 5px;
+    border: 2px solid #1F1F1F;
+}
+
+select::-webkit-scrollbar-thumb:hover,
+.custom-select::-webkit-scrollbar-thumb:hover {
+    background: #0085d0; /* Blue hover effect */
 }
 
 html {

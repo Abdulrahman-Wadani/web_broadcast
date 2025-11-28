@@ -22,12 +22,12 @@
         </p>
 
         <div id="toggleContainer">
-            <span>حروف</span>
+            <span>كلمات</span>
             <label class="switch">
                 <input type="checkbox" id="modeToggle"> 
                 <span class="slider round"></span>
             </label>
-            <span>كلمات</span>
+            <span>حروف</span>
         </div>
 
         <div class="target-box">
@@ -42,11 +42,11 @@
             <hr style="border: 0; border-top: 1px solid #444; margin: 15px 0;">
 
             <div style="display: flex; justify-content: center; gap: 10px; align-items: center;">
+                <select id="manualSelect" class="custom-select"></select>
                 <button id="manualBtn" class="word-btn" onclick="setManualChallenge()" 
                         style="font-size:0.9rem; width:auto; height:auto; padding:8px 15px; background: #444;">
                     اختر
                 </button>
-                <select id="manualSelect" class="custom-select"></select>
             </div>
         </div>
 
@@ -218,7 +218,7 @@
                     
                     socket.emit('Test_Word_Batch', { frames: frames, target: currentTarget });
                 }
-            }, 1000 / 8);
+            }, 1000 / 10);
         }
 
         socket.on('test_response', (serverMessage) => {
