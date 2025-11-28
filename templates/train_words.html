@@ -29,8 +29,8 @@
         </p>
         
         <!-- مشغل الفيديو -->
-        <div class="video-container">
-            <video id="wordVideo" class="training-video" playsinline muted>
+        <div class="video-container" style="display: block;">
+            <video id="wordVideo" class="training-video"  playsinline muted>
                 <source src="" type="video/mp4">
                 متصفحك لا يدعم عرض الفيديو
             </video>
@@ -79,7 +79,7 @@
                 <small style="color: #888;">What</small>
             </button>
             <button class="word-btn" onclick="playWord('اخرس', this)" title="أداء كلمة: اخرس">
-                <div style="font-size: 1.5em; margin-bottom: 5px;">اسكت</div>
+                <div style="font-size: 1.5em; margin-bottom: 5px;">اخرس</div>
                 <small style="color: #888;">Be quiet</small>
             </button>
         </div>
@@ -150,7 +150,7 @@
             // مثلاً: videoPlayer.play() لإعادة التشغيل تلقائياً
         });
 
-        // إضافة مؤشر تقدم الفيديو
+           
         videoPlayer.addEventListener('loadstart', function() {
             console.log('جاري تحميل الفيديو...');
         });

@@ -17,13 +17,14 @@ import io
 import cv2
 import numpy as np
 import pickle
-from flask import Flask, send_from_directory
-from flask_socketio import SocketIO
+from flask import Flask, send_from_directory, request
+from flask_socketio import SocketIO, emit
 from gtts import gTTS
 import mediapipe as mp
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense
+from threading import Lock
 
 # ============================================================================
 # إعداد التطبيق
@@ -32,7 +33,8 @@ app = Flask(__name__)
 socketio = SocketIO(
     app,
     cors_allowed_origins="*",
-    max_http_buffer_size=20_000_000
+    max_http_buffer_size=20_000_000,
+    async_mode='threading'  # استخدام threading للتعامل مع عدة عملاء
 )
 
 # ============================================================================
@@ -46,14 +48,7 @@ class Config:
         "الان", "لا", "في", "ماذا", "اخرس"
     ])
     
-    # قائمة الحروف المدعومة
-    LETTERS_DICT = {
-        0: 'ع', 1: 'ال', 2: 'أ', 3: 'ب', 4: 'د', 5: 'ظ', 6: 'ض', 7: 'ف',
-        8: 'ق', 9: 'غ', 10: 'ه', 11: 'ح', 12: 'ج', 13: 'ك', 14: 'خ',
-        15: 'لا', 16: 'ل', 17: 'م', 18: 'ن', 19: 'ر', 20: 'ص', 21: 'س',
-        22: 'ش', 23: 'ت', 24: 'ط', 25: 'ث', 26: 'ذ', 27: 'ة', 28: 'و',
-        29: ' ', 30: 'ي', 31: 'ز'
-    }
+    
     
     # عدد الإطارات المطلوبة
     WORD_SEQUENCE_LENGTH = 30
@@ -67,7 +62,7 @@ class Config:
 # تهيئة نماذج الذكاء الاصطناعي
 # ============================================================================
 class ModelManager:
-    """إدارة نماذج التعلم العميق"""
+    """إدارة نماذج التعلم العميق - مشتركة بين جميع العملاء"""
     
     def __init__(self):
         print("="*60)
@@ -78,10 +73,10 @@ class ModelManager:
         self.letter_model = self._load_letter_model()
         self.mp_holistic = mp.solutions.holistic
         self.mp_hands = mp.solutions.hands
-        self.hands = self.mp_hands.Hands(
-            static_image_mode=True, 
-            min_detection_confidence=0.3
-        )
+        
+        # قفل للتحكم في الوصول المتزامن للنماذج
+        self.word_model_lock = Lock()
+        self.letter_model_lock = Lock()
         
         print("="*60)
         print("✨ النظام جاهز للاستخدام!")
@@ -135,6 +130,13 @@ class ModelManager:
             print(f"⚠️ النموذج محمّل (تم تخطي التسخين: {e})\n")
         
         return model
+    
+    def create_hands_detector(self):
+        """إنشاء كاشف يدين جديد لكل عميل"""
+        return self.mp_hands.Hands(
+            static_image_mode=True, 
+            min_detection_confidence=0.3
+        )
 
 # ============================================================================
 # معالجة الصور والفيديو
@@ -213,26 +215,63 @@ class AudioProcessor:
             return None
 
 # ============================================================================
-# متغيرات الحالة
+# إدارة جلسات العملاء
 # ============================================================================
-class SessionState:
-    """حالة الجلسة للكلمات والحروف"""
-    # للكلمات
-    word_sequence = []
+class ClientSession:
+    """حالة جلسة لكل عميل - معزولة تماماً"""
     
-    # للحروف
-    letter_text = ""
-    letter_previous_char = None
-    letter_char_counter = 0
-    letter_data_aux = []
-    letter_x = []
-    letter_y = []
+    def __init__(self, session_id):
+        self.session_id = session_id
+        
+        # للكلمات
+        self.word_sequence = []
+        
+        # للحروف
+        self.letter_text = ""
+        self.letter_previous_char = None
+        self.letter_char_counter = 0
+        self.letter_data_aux = []
+        self.letter_x = []
+        self.letter_y = []
+        
+        # كاشف اليدين الخاص بهذا العميل
+        self.hands_detector = None
+        
+        print(f"✅ تم إنشاء جلسة جديدة: {session_id}")
+    
+    def initialize_hands_detector(self):
+        """تهيئة كاشف اليدين لهذا العميل"""
+        if self.hands_detector is None:
+            self.hands_detector = models.create_hands_detector()
+    
+    def cleanup(self):
+        """تنظيف موارد الجلسة"""
+        if self.hands_detector:
+            self.hands_detector.close()
+        print(f"🧹 تم تنظيف الجلسة: {self.session_id}")
+
+# قاموس لتخزين جلسات العملاء
+client_sessions = {}
+sessions_lock = Lock()
+
+def get_or_create_session(session_id):
+    """الحصول على جلسة موجودة أو إنشاء واحدة جديدة"""
+    with sessions_lock:
+        if session_id not in client_sessions:
+            client_sessions[session_id] = ClientSession(session_id)
+        return client_sessions[session_id]
+
+def remove_session(session_id):
+    """إزالة جلسة عميل"""
+    with sessions_lock:
+        if session_id in client_sessions:
+            client_sessions[session_id].cleanup()
+            del client_sessions[session_id]
 
 # ============================================================================
 # تهيئة النظام
 # ============================================================================
 models = ModelManager()
-state = SessionState()
 
 # ============================================================================
 # المسارات (Routes)
@@ -268,14 +307,34 @@ def test_page():
     return send_from_directory('templates', 'test.html')
 
 # ============================================================================
+# معالجات SocketIO - الاتصال
+# ============================================================================
+@socketio.on('connect')
+def handle_connect():
+    """عند اتصال عميل جديد"""
+    session_id = request.sid  # معرف فريد لكل عميل
+    print(f"🔌 عميل جديد متصل: {session_id}")
+    get_or_create_session(session_id)
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    """عند قطع اتصال عميل"""
+    session_id = request.sid
+    print(f"🔌 عميل قطع الاتصال: {session_id}")
+    remove_session(session_id)
+
+# ============================================================================
 # معالجات SocketIO - الكلمات
 # ============================================================================
 @socketio.on('Word_frame')
 def handle_word_frame(data):
-    """معالجة إطار فيديو للكلمات"""
+    """معالجة إطار فيديو للكلمات - مع عزل العميل"""
+    session_id = request.sid
+    session = get_or_create_session(session_id)
+    
     b64 = data.get("b64")
     if not b64:
-        socketio.emit('result', "خطأ: لا توجد بيانات")
+        emit('result', "خطأ: لا توجد بيانات")
         return
     
     try:
@@ -290,58 +349,77 @@ def handle_word_frame(data):
             results = ImageProcessor.mediapipe_detection(frame, holistic)
             keypoints = ImageProcessor.extract_keypoints(results)
             
-            # إضافة للتسلسل
-            state.word_sequence.append(keypoints)
-            state.word_sequence = state.word_sequence[-Config.WORD_SEQUENCE_LENGTH:]
+            # إضافة للتسلسل الخاص بهذا العميل
+            session.word_sequence.append(keypoints)
+            session.word_sequence = session.word_sequence[-Config.WORD_SEQUENCE_LENGTH:]
             
             # التنبؤ عند اكتمال التسلسل
-            if len(state.word_sequence) == Config.WORD_SEQUENCE_LENGTH:
-                prediction = models.word_model.predict(
-                    np.expand_dims(state.word_sequence, axis=0),
-                    verbose=0
-                )[0]
+            if len(session.word_sequence) == Config.WORD_SEQUENCE_LENGTH:
+                # استخدام قفل لمنع التداخل في استخدام النموذج
+                with models.word_model_lock:
+                    prediction = models.word_model.predict(
+                        np.expand_dims(session.word_sequence, axis=0),
+                        verbose=0
+                    )[0]
                 
                 predicted_word = Config.WORDS[np.argmax(prediction)]
                 audio_url = AudioProcessor.text_to_audio_base64(predicted_word)
                 
                 # إعادة تعيين التسلسل
-                state.word_sequence = []
+                session.word_sequence = []
                 
-                socketio.emit('result', {
+                # إرسال النتيجة لهذا العميل فقط
+                emit('result', {
                     "text": predicted_word,
                     "url": audio_url
                 })
     
     except Exception as e:
-        socketio.emit('result', f"خطأ: {str(e)}")
+        emit('result', f"خطأ: {str(e)}")
 
 # ============================================================================
 # معالجات SocketIO - الحروف
 # ============================================================================
 @socketio.on('Letter_frame')
 def handle_letter_frame(data):
-    """معالجة إطار فيديو للحروف"""
+    
+    # قائمة الحروف المدعومة
+    letter_dict = {
+        0: 'ع', 1: 'ال', 2: 'ا', 3: 'ب', 4: 'د', 5: 'ظ', 6: 'ض', 7: 'ف',
+        8: 'ق', 9: 'غ', 10: 'ه', 11: 'ح', 12: 'ج', 13: 'ك', 14: 'خ',
+        15: 'لا', 16: 'ل', 17: 'م', 18: 'ن', 19: 'ر', 20: 'ص', 21: 'س',
+        22: 'ش', 23: 'ت', 24: 'ط', 25: 'ث', 26: 'ذ', 27: 'ة', 28: 'و',
+        29: ' ', 30: 'ي', 31: 'ز'
+    }
+    
+    """معالجة إطار فيديو للحروف - مع عزل العميل"""
+    session_id = request.sid
+    session = get_or_create_session(session_id)
+    
     b64 = data.get("b64")
     if not b64:
-        socketio.emit('result', "خطأ: لا توجد بيانات")
+        emit('result', "خطأ: لا توجد بيانات")
         return
     
     try:
+        # تهيئة كاشف اليدين إذا لم يكن موجوداً
+        session.initialize_hands_detector()
+        
         frame = ImageProcessor.decode_base64_image(b64)
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        results = models.hands.process(frame_rgb)
+        results = session.hands_detector.process(frame_rgb)
         
         # التحقق من رفع يدين (إشارة لإنهاء الكلمة)
         if results.multi_hand_landmarks and len(results.multi_hand_landmarks) >= 2:
-            if state.letter_text:
-                audio_url = AudioProcessor.text_to_audio_base64(state.letter_text)
-                socketio.emit('result', {
+            if session.letter_text:
+                audio_url = AudioProcessor.text_to_audio_base64(session.letter_text)
+                emit('result', {
                     "text": "",
                     "url": audio_url
                 })
-                state.letter_text = ""
-                state.letter_char_counter = 0
-                state.letter_previous_char = None
+                session.letter_text = ""
+                session.letter_char_counter = 0
+                session.letter_previous_char = None
             return
         
         # معالجة يد واحدة
@@ -349,39 +427,40 @@ def handle_letter_frame(data):
             for hand_landmarks in results.multi_hand_landmarks:
                 # استخراج الإحداثيات
                 for landmark in hand_landmarks.landmark:
-                    state.letter_x.append(landmark.x)
-                    state.letter_y.append(landmark.y)
+                    session.letter_x.append(landmark.x)
+                    session.letter_y.append(landmark.y)
                 
                 # تطبيع البيانات
                 for landmark in hand_landmarks.landmark:
-                    state.letter_data_aux.append(landmark.x - min(state.letter_x))
-                    state.letter_data_aux.append(landmark.y - min(state.letter_y))
+                    session.letter_data_aux.append(landmark.x - min(session.letter_x))
+                    session.letter_data_aux.append(landmark.y - min(session.letter_y))
                 
-                # التنبؤ
-                prediction = models.letter_model.predict([
-                    np.asarray(state.letter_data_aux)
-                ])
-                predicted_char = Config.LETTERS_DICT[int(prediction[0])]
+                # التنبؤ مع قفل النموذج
+                with models.letter_model_lock:
+                    prediction = models.letter_model.predict([
+                        np.asarray(session.letter_data_aux)
+                    ])
+                predicted_char = letter_dict[int(prediction[0])]
                 
                 # إعادة تعيين البيانات المؤقتة
-                state.letter_data_aux = []
-                state.letter_x = []
-                state.letter_y = []
+                session.letter_data_aux = []
+                session.letter_x = []
+                session.letter_y = []
                 
                 # عد التكرارات
-                if predicted_char == state.letter_previous_char:
-                    state.letter_char_counter += 1
+                if predicted_char == session.letter_previous_char:
+                    session.letter_char_counter += 1
                 else:
-                    state.letter_previous_char = predicted_char
-                    state.letter_char_counter = 0
+                    session.letter_previous_char = predicted_char
+                    session.letter_char_counter = 0
                 
                 # إضافة الحرف عند الوصول للعدد المطلوب
-                if state.letter_char_counter >= Config.LETTER_REQUIRED_OCCURRENCES:
-                    state.letter_text += predicted_char
-                    state.letter_char_counter = 0
+                if session.letter_char_counter >= Config.LETTER_REQUIRED_OCCURRENCES:
+                    session.letter_text += predicted_char
+                    session.letter_char_counter = 0
         
-        socketio.emit('result', {
-            "text": state.letter_text,
+        emit('result', {
+            "text": session.letter_text,
             "url": None
         })
     
@@ -393,18 +472,34 @@ def handle_letter_frame(data):
 # ============================================================================
 @socketio.on('Test_Letter')
 def handle_test_letter(data):
-    """اختبار الحروف"""
+    
+    # قائمة الحروف المدعومة
+    letter_dict = {
+        0: 'ع', 1: 'ال', 2: 'أ', 3: 'ب', 4: 'د', 5: 'ظ', 6: 'ض', 7: 'ف',
+        8: 'ق', 9: 'غ', 10: 'ه', 11: 'ح', 12: 'ج', 13: 'ك', 14: 'خ',
+        15: 'لا', 16: 'ل', 17: 'م', 18: 'ن', 19: 'ر', 20: 'ص', 21: 'س',
+        22: 'ش', 23: 'ت', 24: 'ط', 25: 'ث', 26: 'ذ', 27: 'ة', 28: 'و',
+        29: ' ', 30: 'ي', 31: 'ز'
+    }
+    
+    """اختبار الحروف - مع عزل العميل"""
+    session_id = request.sid
+    session = get_or_create_session(session_id)
+    
     b64 = data.get("b64")
     target_char = data.get("target")
     
     if not b64:
-        socketio.emit('test_response', "خطأ: لا توجد بيانات")
+        emit('test_response', "خطأ: لا توجد بيانات")
         return
     
     try:
+        # تهيئة كاشف اليدين إذا لم يكن موجوداً
+        session.initialize_hands_detector()
+        
         frame = ImageProcessor.decode_base64_image(b64)
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        results = models.hands.process(frame_rgb)
+        results = session.hands_detector.process(frame_rgb)
         
         confidence_score = 0.0
         predicted_char = None
@@ -423,14 +518,15 @@ def handle_test_letter(data):
                     temp_data.append(landmark.x - min(temp_x))
                     temp_data.append(landmark.y - min(temp_y))
                 
-                probabilities = models.letter_model.predict_proba([
-                    np.asarray(temp_data)
-                ])
-                best_idx = np.argmax(probabilities[0])
-                confidence_score = probabilities[0][best_idx]
-                
-                prediction = models.letter_model.predict([np.asarray(temp_data)])
-                predicted_char = Config.LETTERS_DICT[int(prediction[0])]
+                with models.letter_model_lock:
+                    probabilities = models.letter_model.predict_proba([
+                        np.asarray(temp_data)
+                    ])
+                    best_idx = np.argmax(probabilities[0])
+                    confidence_score = probabilities[0][best_idx]
+                    
+                    prediction = models.letter_model.predict([np.asarray(temp_data)])
+                    predicted_char = letter_dict[int(prediction[0])]
         
         # تحويل الثقة إلى نسبة مئوية مفهومة
         human_score = np.interp(confidence_score, [0.2, 0.8], [50, 100])
@@ -441,19 +537,23 @@ def handle_test_letter(data):
         else:
             result = f"❌ خطأ! أنت أديت: {predicted_char} بدقة {human_score}%"
         
-        socketio.emit('test_response', result)
+        emit('test_response', result)
     
     except Exception as e:
-        socketio.emit('test_response', f"خطأ: {str(e)}")
+        emit('test_response', f"خطأ: {str(e)}")
 
 @socketio.on('Test_Word')
 def handle_test_word(data):
+    """اختبار الكلمات - مع عزل العميل"""
+    session_id = request.sid
+    session = get_or_create_session(session_id)
+    
     predicted_word = ""
     b64 = data.get("b64")
     target_word = data.get("target")
     
     if not b64:
-        socketio.emit('result', "خطأ: لا توجد بيانات")
+        emit('result', "خطأ: لا توجد بيانات")
         return
     
     try:
@@ -469,15 +569,16 @@ def handle_test_word(data):
             keypoints = ImageProcessor.extract_keypoints(results)
             
             # إضافة للتسلسل
-            state.word_sequence.append(keypoints)
-            state.word_sequence = state.word_sequence[-Config.WORD_SEQUENCE_LENGTH:]
+            session.word_sequence.append(keypoints)
+            session.word_sequence = session.word_sequence[-Config.WORD_SEQUENCE_LENGTH:]
             
             # التنبؤ عند اكتمال التسلسل
-            if len(state.word_sequence) == Config.WORD_SEQUENCE_LENGTH:
-                prediction = models.word_model.predict(
-                    np.expand_dims(state.word_sequence, axis=0),
-                    verbose=0
-                )[0]
+            if len(session.word_sequence) == Config.WORD_SEQUENCE_LENGTH:
+                with models.word_model_lock:
+                    prediction = models.word_model.predict(
+                        np.expand_dims(session.word_sequence, axis=0),
+                        verbose=0
+                    )[0]
                 
                 predicted_idx = np.argmax(prediction)
                 confidence = prediction[predicted_idx]
@@ -485,18 +586,17 @@ def handle_test_word(data):
                 print(predicted_word)
                 
                 # إعادة تعيين التسلسل
-                state.word_sequence = []
+                session.word_sequence = []
     
         if predicted_word == target_word:
             result = f"✅ صحيح! الدقة: {confidence:.0%}"
-            socketio.emit('test_response', result)
-        elif predicted_word!="":
+            emit('test_response', result)
+        elif predicted_word != "":
             result = f"❌ خطأ! أنت أديت: {predicted_word}"
-            socketio.emit('test_response', result)
-        
+            emit('test_response', result)
     
     except Exception as e:
-        socketio.emit('test_response', f"خطأ: {str(e)}")
+        emit('test_response', f"خطأ: {str(e)}")
 
 # ============================================================================
 # تشغيل التطبيق
