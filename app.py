@@ -34,7 +34,7 @@ socketio = SocketIO(
     app,
     cors_allowed_origins="*",
     max_http_buffer_size=20_000_000,
-    async_mode='threading'  # استخدام threading للتعامل مع عدة عملاء
+    async_mode='threading'
 )
 
 # ============================================================================
@@ -48,11 +48,9 @@ class Config:
         "الان", "لا", "في", "ماذا", "اخرس"
     ])
     
-    
-    
     # عدد الإطارات المطلوبة
     WORD_SEQUENCE_LENGTH = 30
-    LETTER_REQUIRED_OCCURRENCES = 5
+    LETTER_REQUIRED_OCCURRENCES = 10
     
     # مسارات الملفات
     WORD_MODEL_PATH = r".\utils\DL_model\checkpoints\best_model.keras"
@@ -225,6 +223,8 @@ class ClientSession:
         
         # للكلمات
         self.word_sequence = []
+        self.collected_words = []  # NEW: Store detected words
+        self.full_sentence = ""     # NEW: Complete sentence
         
         # للحروف
         self.letter_text = ""
@@ -243,6 +243,27 @@ class ClientSession:
         """تهيئة كاشف اليدين لهذا العميل"""
         if self.hands_detector is None:
             self.hands_detector = models.create_hands_detector()
+    
+    def add_word(self, word):
+        """إضافة كلمة للجملة"""
+        self.collected_words.append(word)
+        self.full_sentence = " ".join(self.collected_words)
+        return self.full_sentence
+    
+    def get_sentence(self):
+        """الحصول على الجملة الكاملة"""
+        return self.full_sentence
+    
+    def generate_sentence_audio(self):
+        """توليد صوت للجملة الكاملة"""
+        if self.full_sentence:
+            return AudioProcessor.text_to_audio_base64(self.full_sentence)
+        return None
+    
+    def clear_sentence(self):
+        """مسح الجملة"""
+        self.collected_words = []
+        self.full_sentence = ""
     
     def cleanup(self):
         """تنظيف موارد الجلسة"""
@@ -312,7 +333,7 @@ def test_page():
 @socketio.on('connect')
 def handle_connect():
     """عند اتصال عميل جديد"""
-    session_id = request.sid  # معرف فريد لكل عميل
+    session_id = request.sid
     print(f"🔌 عميل جديد متصل: {session_id}")
     get_or_create_session(session_id)
 
@@ -334,7 +355,7 @@ def handle_word_frame(data):
     
     b64 = data.get("b64")
     if not b64:
-        emit('result', "خطأ: لا توجد بيانات")
+        emit('word_result', {"error": "لا توجد بيانات"})
         return
     
     try:
@@ -363,19 +384,46 @@ def handle_word_frame(data):
                     )[0]
                 
                 predicted_word = Config.WORDS[np.argmax(prediction)]
-                audio_url = AudioProcessor.text_to_audio_base64(predicted_word)
+                confidence = float(np.max(prediction))
+                
+                # إضافة الكلمة للجملة
+                sentence = session.add_word(predicted_word)
                 
                 # إعادة تعيين التسلسل
                 session.word_sequence = []
                 
                 # إرسال النتيجة لهذا العميل فقط
-                emit('result', {
-                    "text": predicted_word,
-                    "url": audio_url
+                emit('word_result', {
+                    "word": predicted_word,
+                    "sentence": sentence,
+                    "confidence": confidence,
+                    "word_count": len(session.collected_words)
                 })
     
     except Exception as e:
-        emit('result', f"خطأ: {str(e)}")
+        emit('word_result', {"error": str(e)})
+
+@socketio.on('get_sentence_audio')
+def handle_get_sentence_audio():
+    """توليد الصوت للجملة الكاملة"""
+    session_id = request.sid
+    session = get_or_create_session(session_id)
+    
+    audio_url = session.generate_sentence_audio()
+    
+    emit('sentence_audio', {
+        "sentence": session.get_sentence(),
+        "audio_url": audio_url
+    })
+
+@socketio.on('clear_sentence')
+def handle_clear_sentence():
+    """مسح الجملة"""
+    session_id = request.sid
+    session = get_or_create_session(session_id)
+    session.clear_sentence()
+    
+    emit('sentence_cleared', {"message": "تم مسح الجملة"})
 
 # ============================================================================
 # معالجات SocketIO - الحروف

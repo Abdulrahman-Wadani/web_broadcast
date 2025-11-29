@@ -7,8 +7,7 @@
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <a href=""><img src="/static/logo.png" class="logo" alt="شعار إيماء">
-    </a>
+    <a href=""><img src="/static/logo.png" class="logo" alt="شعار إيماء"></a>
     
     <div class="nav-header">
         <button class="back-btn" onclick="window.location.href='/'">
@@ -17,44 +16,58 @@
     </div>
 
     <div class="container">
-        <h2 style="margin-top: -60px;">الترجمة المباشرة</h2>
+        <h2>الترجمة المباشرة</h2>
         <p style="color: #888; margin-bottom: 30px;">
             قم بأداء الإشارات أمام الكاميرا وسيقوم النظام بترجمتها فوراً
         </p>
         
-        <div style="position: relative; display: inline-block;">
-            <video id="video" autoplay playsinline muted width="960" height="540"></video>
+        <div class="video-container">
+            <video id="video" autoplay playsinline muted width="100%" height="100%"></video>
             <canvas id="canvas" width="1280" height="720" style="display:none;"></canvas>
+            
+            <!-- Frame Counter (Green) -->
+            <div class="counter frame-counter" id="frameCounter">0/30</div>
+            
+            <!-- Wait Counter (Red) -->
+            <div class="counter wait-counter" id="waitCounter">4</div>
         </div>
 
         <div>
             <button id="startBtn">🎥 تشغيل الكاميرا</button>
 
-            <div id="toggleContainer" style="display:none;">
-                <span>حرف</span>
+            <div id="toggleContainer">
+                <span>كلمة</span>
                 <label class="switch">
                     <input type="checkbox" id="modeToggle">
                     <span class="slider round"></span>
                 </label>
-                <span>كلمة</span>
+                <span>حرف</span>
             </div>
 
-            <div id="buttonContainer" style="position: relative; height: 60px; margin-top: 10px;">
-                <button id="analysisBtnBurst" style="display:none;">🔍 بدء التحليل</button>
-                <button id="analysisBtnContinuous" style="display:none;">🔍 بدء التحليل</button>
+            <div id="buttonContainer">
+                <button id="analysisBtn" style="display:none;">🔍 بدء التحليل</button>
+                <button id="stopBtn" class="stop-btn" style="display:none;">⏹ إيقاف وتشغيل الصوت</button>
+                <button id="clearBtn" class="clear-btn" style="display:none;">🗑️ مسح الجملة</button>
             </div>
             
-            <div id="timerDiv" style="font-size: 2em; color: #0085d0; height: 40px; font-weight: bold;"></div>
+            <div id="wordInfo" class="word-info">
+                عدد الكلمات: <span id="wordCount">0</span>
+            </div>
+            
             <div id="textResultDiv">في انتظار الإدخال...</div>
         </div>
 
         <div style="margin-top: 30px; padding: 20px; background: #1e1e1e; border-radius: 10px;">
             <h4 style="color: #0085d0; margin-bottom: 10px;">💡 إرشادات الاستخدام:</h4>
             <ul style="color: #aaa; text-align: right; line-height: 2;">
-                <li><strong>وضع الكلمة:</strong> قم بأداء الإشارة كاملة خلال 3 ثوانٍ</li>
+                <li><strong>وضع الكلمة:</strong> النظام يعمل مباشرة - قم بأداء الإشارة خلال 3 ثوانٍ (30 إطار)</li>
+                <li><strong>بعد كل كلمة:</strong> انتظر 4 ثوانٍ قبل البدء بالكلمة التالية</li>
+                <li><strong>العدادات:</strong> الأخضر يعرض الإطارات الحالية، الأحمر يعرض وقت الانتظار</li>
+                <li><strong>الجملة:</strong> يتم بناء الجملة تلقائياً من الكلمات المكتشفة</li>
+                <li><strong>الصوت:</strong> اضغط "إيقاف وتشغيل الصوت" للاستماع للجملة الكاملة</li>
                 <li><strong>وضع الحرف:</strong> اثبت على إشارة الحرف لثانيتين، ارفع يديك معاً لتحويل النص إلى صوت</li>
                 <li>تأكد من وضوح يديك أمام الكاميرا</li>
-                <li>تأكد ان الاضاءة معتدلة, تجنب الإضاءة الخلفية القوية او الخفيفة بشكل مبالغ فيه</li>
+                <li>تأكد من إضاءة معتدلة - تجنب الإضاءة الخلفية القوية</li>
             </ul>
         </div>
     </div>
@@ -68,16 +81,23 @@
         const ctx = canvas.getContext('2d');
 
         const startBtn = document.getElementById('startBtn');
-        const timerDiv = document.getElementById('timerDiv');
         const textResultDiv = document.getElementById('textResultDiv');
         const toggleContainer = document.getElementById('toggleContainer');
         const modeToggle = document.getElementById('modeToggle');
-        const burstBtn = document.getElementById('analysisBtnBurst');
-        const continuousBtn = document.getElementById('analysisBtnContinuous');
+        const analysisBtn = document.getElementById('analysisBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const frameCounter = document.getElementById('frameCounter');
+        const waitCounter = document.getElementById('waitCounter');
+        const wordInfo = document.getElementById('wordInfo');
+        const wordCount = document.getElementById('wordCount');
 
         let sendingInterval = null;
-        let timerInterval = null;
         let isStreaming = false;
+        let isWordMode = false;
+        let frameCount = 0;
+        let waitTime = 4;
+        let isWaiting = false;
 
         socket.on('connect', () => {
             console.log("✅ تم الاتصال بالخادم");
@@ -90,7 +110,7 @@
                 });  
                 video.srcObject = stream;
                 startBtn.style.display = 'none';
-                burstBtn.style.display = 'inline-block';
+                analysisBtn.style.display = 'inline-block';
                 toggleContainer.style.display = 'flex'; 
                 textResultDiv.innerText = "جاهز للترجمة...";
             } catch(e) {
@@ -100,75 +120,156 @@
         };
 
         modeToggle.onchange = () => {
-            if (modeToggle.checked) {
-                burstBtn.style.display = 'none';
-                continuousBtn.style.display = 'inline-block';
-            } else {
-                burstBtn.style.display = 'inline-block';
-                continuousBtn.style.display = 'none';
+            isWordMode = modeToggle.checked;
+            if (isStreaming) {
+                stopAnalysis();
             }
         };
 
-        burstBtn.onclick = () => {
-            burstBtn.disabled = true;
-            modeToggle.disabled = true;
-            textResultDiv.innerText = "جارٍ التحليل...";
-            
-            let countdown = 3;
-            timerDiv.innerText = countdown;
-            let framesSent = 0;
+        analysisBtn.onclick = () => {
+            if (!isStreaming) {
+                startAnalysis();
+            }
+        };
 
+        stopBtn.onclick = () => {
+            stopAnalysis();
+            // Request sentence audio from backend
+            if (isWordMode) {
+                socket.emit('get_sentence_audio');
+            }
+        };
+
+        clearBtn.onclick = () => {
+            socket.emit('clear_sentence');
+            textResultDiv.innerText = "تم مسح الجملة - جاهز للبدء من جديد";
+            wordCount.innerText = "0";
+        };
+
+        function startAnalysis() {
+            isStreaming = true;
+            analysisBtn.style.display = 'none';
+            stopBtn.style.display = 'inline-block';
+            modeToggle.disabled = true;
+            
+            if (isWordMode) {
+                clearBtn.style.display = 'inline-block';
+                wordInfo.style.display = 'block';
+                startWordMode();
+            } else {
+                clearBtn.style.display = 'none';
+                wordInfo.style.display = 'none';
+                startLetterMode();
+            }
+        }
+
+        function stopAnalysis() {
+            isStreaming = false;
+            stopBtn.style.display = 'none';
+            analysisBtn.style.display = 'inline-block';
+            modeToggle.disabled = false;
+            clearInterval(sendingInterval);
+            
+            frameCounter.style.display = 'none';
+            waitCounter.style.display = 'none';
+            
+            frameCount = 0;
+            isWaiting = false;
+        }
+
+        function startWordMode() {
+            frameCount = 0;
+            isWaiting = false;
+            textResultDiv.innerHTML = '<span class="status-indicator status-live"></span>جارٍ التحليل المباشر...';
+            
+            frameCounter.style.display = 'block';
+            frameCounter.textContent = '0/30';
+            
+            sendingInterval = setInterval(() => {
+                if (isWaiting) {
+                    return;
+                }
+                
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                const b64 = canvas.toDataURL('image/jpeg', 0.5).split(',')[1];
+                socket.emit('Word_frame', { b64: b64 });
+                
+                frameCount++;
+                frameCounter.textContent = `${frameCount}/30`;
+                
+                if (frameCount >= 30) {
+                    frameCount = 0;
+                    startWaitPeriod();
+                }
+            }, 1000 / 10);
+        }
+
+        function startWaitPeriod() {
+            isWaiting = true;
+            waitTime = 2;
+            
+            waitCounter.style.display = 'block';
+            waitCounter.textContent = waitTime;
+            frameCounter.textContent = 'انتظار...';
+            
+            const waitInterval = setInterval(() => {
+                waitTime--;
+                waitCounter.textContent = waitTime;
+                
+                if (waitTime <= 0) {
+                    clearInterval(waitInterval);
+                    waitCounter.style.display = 'none';
+                    isWaiting = false;
+                    frameCounter.textContent = '0/30';
+                }
+            }, 1000);
+        }
+
+        function startLetterMode() {
+            textResultDiv.innerHTML = '<span class="status-indicator status-live"></span>مباشر - وضع الحروف';
+            frameCounter.style.display = 'none';
+            waitCounter.style.display = 'none';
+            
             sendingInterval = setInterval(() => {
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                 const b64 = canvas.toDataURL('image/jpeg', 0.5).split(',')[1];
-                socket.emit('Word_frame', { b64: b64 }); 
-                
-                framesSent++;
-                if (framesSent >= 30) {
-                    stopRecording();
-                }
+                socket.emit('Letter_frame', { b64: b64 });
             }, 1000 / 10);
+        }
 
-            timerInterval = setInterval(() => {
-                countdown--;
-                if (countdown > 0) timerDiv.innerText = countdown;
-            }, 1000);
-
-            function stopRecording() {
-                clearInterval(timerInterval);
-                clearInterval(sendingInterval);
-                burstBtn.disabled = false;
-                modeToggle.disabled = false;
-                timerDiv.innerText = "تم ✓"; 
+        // Handle word detection results
+        socket.on('word_result', (data) => {
+            if (data.error) {
+                textResultDiv.innerHTML = `<span style="color: #f44336;">خطأ: ${data.error}</span>`;
+                return;
             }
-        };
-
-        continuousBtn.onclick = () => {
-            if (!isStreaming) {
-                isStreaming = true;
-                continuousBtn.innerText = "⏹ إيقاف التحليل";
-                continuousBtn.style.background = '#d32f2f';
-                modeToggle.disabled = true;
-                timerDiv.innerText = "مباشر 🔴";
-                
-                sendingInterval = setInterval(() => {
-                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                    const b64 = canvas.toDataURL('image/jpeg', 0.5).split(',')[1];
-                    socket.emit('Letter_frame', { b64: b64 });
-                }, 1000 / 6);
-            } else {
-                isStreaming = false;
-                continuousBtn.innerText = "🔍 بدء التحليل";
-                continuousBtn.style.background = '#0085d0';
-                modeToggle.disabled = false;
-                timerDiv.innerText = "";
-                clearInterval(sendingInterval);
+            
+            if (data.sentence) {
+                textResultDiv.innerHTML = `<span class="status-indicator status-live"></span>${data.sentence}`;
+                wordCount.innerText = data.word_count || 0;
             }
-        };
+        });
 
+        // Handle sentence audio
+        socket.on('sentence_audio', (data) => {
+            if (data.audio_url) {
+                audioPlayer.src = data.audio_url;
+                audioPlayer.play();
+                textResultDiv.innerHTML = `📢 ${data.sentence}`;
+            }
+        });
+
+        // Handle sentence cleared
+        socket.on('sentence_cleared', () => {
+            textResultDiv.innerText = "تم مسح الجملة";
+            wordCount.innerText = "0";
+        });
+
+        // Handle letter mode results
         socket.on('result', (data) => {
-            if(typeof data === 'object'){
+            if (typeof data === 'object') {
                 textResultDiv.innerText = data.text || "في انتظار الإدخال...";
+                
                 if (data.url) {
                     audioPlayer.src = data.url;
                     audioPlayer.play();
@@ -181,11 +282,10 @@
 
     <footer style="margin-top: 50px; padding: 20px; text-align: center; color: #666;">
         <p style="padding-bottom: 15px;">طلاب جامعة الملك سعود:</p>
-        
         <p>عبدالرحمن عائل ودعاني</p>
         <p>عبدالرحمن عبدالحي سلامة</p>
         <p style="padding-bottom: 10px;">فارس علي مخرش</p>
-        <p> جميع الحقوق محفوظة © 2025 </p>
+        <p>جميع الحقوق محفوظة © 2025</p>
     </footer>
 </body>
 </html>
