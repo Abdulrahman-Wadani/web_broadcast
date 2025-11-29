@@ -128,6 +128,7 @@
 
         analysisBtn.onclick = () => {
             if (!isStreaming) {
+                socket.emit('flush_sequence');
                 startAnalysis();
             }
         };
@@ -136,12 +137,14 @@
             stopAnalysis();
             // Request sentence audio from backend
             if (isWordMode) {
+                socket.emit('flush_sequence');
                 socket.emit('get_sentence_audio');
             }
         };
 
         clearBtn.onclick = () => {
             socket.emit('clear_sentence');
+            socket.emit('flush_sequence');
             textResultDiv.innerText = "تم مسح الجملة - جاهز للبدء من جديد";
             wordCount.innerText = "0";
         };
